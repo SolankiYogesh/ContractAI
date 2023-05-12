@@ -53,7 +53,7 @@ const verticalScale = (size: number) =>
 const moderateScale = (size: number, factor = 0.5) =>
   Number(Number(size + (scale(size) - size) * factor).toFixed())
 
-const INPUT_HEIGHT = verticalScale(56)
+const INPUT_HEIGHT = verticalScale(50)
 
 export const STATUSBAR_HEIGHT = getStatusBarHeight()
 
@@ -61,6 +61,7 @@ export {
   getStatusBarHeight,
   heightPx,
   INPUT_HEIGHT,
+  isIPhoneX,
   moderateScale,
   scale,
   verticalScale,

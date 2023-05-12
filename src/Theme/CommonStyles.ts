@@ -10,7 +10,7 @@ export const CommonStyles = StyleSheet.create({
       width: 0,
       height: 2
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 3.84,
     elevation: 5,
     backgroundColor: Colors.white
@@ -22,10 +22,16 @@ export const CommonStyles = StyleSheet.create({
   flex: {
     flex: 1
   },
+  rowView: {flexDirection: 'row', alignItems: 'center'},
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between'
+  },
+  onlyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   bodyStyle: {
     backgroundColor: Colors.white

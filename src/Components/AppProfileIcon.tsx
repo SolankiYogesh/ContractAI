@@ -1,5 +1,6 @@
 import React from 'react'
 import {ImageStyle, StyleProp, StyleSheet, TouchableOpacity, ViewStyle} from 'react-native'
+import Skeleton from '@thevsstech/react-native-skeleton'
 
 import {Colors} from '../Theme'
 import {moderateScale, scale, verticalScale} from '../Theme/Responsive'
@@ -15,6 +16,7 @@ interface AppProfileImageProps {
   size?: number
   borderRadius?: number
   activeOpacity?: number
+  isLoading?: boolean
 }
 
 const AppProfileImage = (props: AppProfileImageProps) => {
@@ -27,7 +29,8 @@ const AppProfileImage = (props: AppProfileImageProps) => {
     style,
     borderColor,
     borderRadius = 15,
-    activeOpacity = 0.5
+    activeOpacity = 0.5,
+    isLoading = false
   } = props
 
   return (
@@ -41,17 +44,30 @@ const AppProfileImage = (props: AppProfileImageProps) => {
           height: verticalScale(size),
           borderRadius: moderateScale(borderRadius)
         },
+        isLoading && styles.borderZero,
         style
       ]}
       activeOpacity={activeOpacity}
       disabled={!onPress}
       onPress={onPress}
     >
-      <AppLoadingImage
-        borderRadius={moderateScale(5)}
-        url={url}
-        style={[styles.profileImage, imageStyle]}
-      />
+      {isLoading ? (
+        <Skeleton>
+          <Skeleton.Item
+            borderColor={Colors.transparent}
+            borderRadius={borderRadius}
+            width={size}
+            borderWidth={0}
+            height={size}
+          />
+        </Skeleton>
+      ) : (
+        <AppLoadingImage
+          borderRadius={moderateScale(5)}
+          url={url || 'https://i.ibb.co/znvXjTV/untitled.png'}
+          style={[styles.profileImage, imageStyle]}
+        />
+      )}
     </TouchableOpacity>
   )
 }
@@ -83,5 +99,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.ThemeColor,
     borderRadius: moderateScale(15),
     overflow: 'hidden'
+  },
+  borderZero: {
+    borderWidth: 0
   }
 })

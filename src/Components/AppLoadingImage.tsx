@@ -35,7 +35,7 @@ const AppLoadingImage = (props: AppLoadingImageProps) => {
       )}
       <Image
         onError={() => setISLoading(false)}
-        onLoad={(e) => setISLoading(false)}
+        onLoad={() => setISLoading(false)}
         resizeMode={resizeMode}
         source={{uri: url}}
         style={[styles.image, imageStyle]}

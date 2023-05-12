@@ -1,5 +1,5 @@
 import React, {useCallback} from 'react'
-import {ImageSourcePropType, StyleProp, TextStyle, ViewStyle} from 'react-native'
+import {ImageSourcePropType, Keyboard, StyleProp, TextStyle, ViewStyle} from 'react-native'
 import {DrawerActions, useNavigation} from '@react-navigation/native'
 import styled from 'styled-components/native'
 
@@ -38,13 +38,14 @@ const AppHeader = (props: AppHeaderProps) => {
 
   const onPressLeftRef = useCallback(() => {
     if (isMenu) {
+      Keyboard.dismiss()
       navigation.dispatch(DrawerActions.toggleDrawer())
     } else if (isBack) {
       navigation.goBack()
     } else if (onPressLeft) {
       onPressLeft()
     }
-  }, [isMenu, onPressLeft, isBack])
+  }, [isMenu, isBack, onPressLeft, navigation])
 
   return (
     <HeaderView style={style}>
@@ -79,4 +80,5 @@ const TitleText = styled.Text`
   text-align: center;
   position: absolute;
   width: 100%;
+  z-index: -1;
 `

@@ -33,7 +33,6 @@ const AppContainer = (props: AppContainerProps) => {
   return (
     <Container style={style}>
       <StatusBar translucent={translucent} backgroundColor={statusbarColor} barStyle={barStyle} />
-
       <TopComponent style={topStyle} />
       <Container>{children}</Container>
       <BottomComponent style={bottomStyle} />

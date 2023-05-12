@@ -1,11 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-bitwise */
 import React, {useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react'
 import {StyleProp, TextStyle, ViewStyle} from 'react-native'
 import BackgroundTimer from 'react-native-background-timer'
 
-import {AlreadyAccountText} from '../CommonStyle/AuthContainer'
+import {verticalScale} from '../Theme/Responsive'
 import Utility from '../Theme/Utility'
+import TouchText from './TouchText'
 
 export interface ICountdownRef {
   start: () => void
@@ -34,17 +33,7 @@ const defaultProps = {
 }
 
 const Timer = React.forwardRef<any, CountDownProps>((props, ref) => {
-  const {
-    initialSeconds = 0,
-
-    textStyle,
-    fontFamily,
-    autoStart = false,
-    formatTime,
-    onEnd,
-    onTimes,
-    onPause
-  } = props
+  const {initialSeconds = 0, textStyle, autoStart = false, onEnd, onTimes, onPause} = props
 
   const interval = useRef(0)
   const hours = useRef(0)
@@ -68,20 +57,42 @@ const Timer = React.forwardRef<any, CountDownProps>((props, ref) => {
     setKey(Math.random())
   }, [initialSeconds])
 
+  const timer = useCallback(() => {
+    interval.current = BackgroundTimer.setInterval(() => {
+      if (currentSeconds.current > 0) {
+        currentSeconds.current = currentSeconds.current - 1
+        hours.current = ~~(currentSeconds.current / 3600)
+        minute.current = ~~((currentSeconds.current % 3600) / 60)
+        seconds.current = ~~currentSeconds.current % 60
+
+        if (onTimes) {
+          onTimes(currentSeconds.current)
+        }
+      }
+      if (currentSeconds.current <= 0) {
+        if (onEnd) {
+          onEnd(currentSeconds.current)
+        }
+        clear()
+      }
+      setKey(Math.random())
+    }, 1000)
+  }, [onEnd, onTimes])
+
   const start = useCallback(() => {
     init()
 
     if (!interval.current) {
       timer()
     }
-  }, [])
+  }, [init, timer])
 
   const pause = useCallback(() => {
     clear()
     if (onPause) {
       onPause(currentSeconds.current)
     }
-  }, [])
+  }, [onPause])
 
   const resume = () => {
     if (!interval.current) {
@@ -108,95 +119,29 @@ const Timer = React.forwardRef<any, CountDownProps>((props, ref) => {
 
   useEffect(() => {
     init()
-  }, [initialSeconds])
+  }, [init, initialSeconds])
 
   useEffect(() => {
     return () => {
       pause()
     }
-  }, [])
+  }, [pause])
 
   useEffect(() => {
     if (autoStart) {
       start()
     }
-  }, [autoStart])
+  }, [autoStart, start])
 
-  const font = () => {
-    if (fontFamily) {
-      return {
-        fontFamily
-      }
-    } else {
-      return {}
-    }
-  }
-
-  const timer = useCallback(() => {
-    interval.current = BackgroundTimer.setInterval(() => {
-      if (currentSeconds.current > 0) {
-        currentSeconds.current = currentSeconds.current - 1
-        hours.current = ~~(currentSeconds.current / 3600)
-        minute.current = ~~((currentSeconds.current % 3600) / 60)
-        seconds.current = ~~currentSeconds.current % 60
-
-        if (onTimes) {
-          onTimes(currentSeconds.current)
-        }
-      }
-      if (currentSeconds.current <= 0) {
-        if (onEnd) {
-          onEnd(currentSeconds.current)
-        }
-        clear()
-      }
-      setKey(Math.random())
-    }, 1000)
-  }, [])
-
-  const renderTimer = () => {
-    if (formatTime === 'hh:mm:ss') {
-      if (hours.current > 0) {
-        return (
-          <AlreadyAccountText key={key} style={[textStyle, font()]}>{`${hours.current}:${
-            minute.current.toString().length === 1 ? '0' : ''
-          }${minute.current}:${seconds.current.toString().length === 1 ? '0' : ''}${
-            seconds.current
-          }`}</AlreadyAccountText>
-        )
-      } else {
-        if (minute.current > 0) {
-          return (
-            <AlreadyAccountText key={key} style={[textStyle, font()]}>{`${minute.current}:${
-              seconds.current.toString().length === 1 ? '0' : ''
-            }${seconds.current}`}</AlreadyAccountText>
-          )
-        } else {
-          return (
-            <AlreadyAccountText
-              key={key}
-              style={[textStyle, font()]}
-            >{`${seconds.current}`}</AlreadyAccountText>
-          )
-        }
-      }
-    } else if (formatTime === 'ss') {
-      return (
-        <AlreadyAccountText
-          key={key}
-          style={[textStyle, font()]}
-        >{`${currentSeconds.current}`}</AlreadyAccountText>
-      )
-    } else {
-      return (
-        <AlreadyAccountText key={key} isClickable style={[textStyle, font()]}>
-          {Utility.secondsToMMSS(currentSeconds.current)}
-        </AlreadyAccountText>
-      )
-    }
-  }
-
-  return renderTimer()
+  return (
+    <TouchText
+      marginTop={verticalScale(30)}
+      marginBottom={verticalScale(30)}
+      key={key}
+      style={textStyle}
+      text={Utility.secondsToMMSS(currentSeconds.current)}
+    />
+  )
 })
 
 Timer.defaultProps = defaultProps

@@ -16,6 +16,7 @@ interface BackButtonProps {
   isHeader?: boolean
   disabled?: boolean
   colors?: string[]
+  parentStyle?: StyleProp<ViewStyle>
 }
 
 const BackButton = (props: BackButtonProps) => {
@@ -26,7 +27,8 @@ const BackButton = (props: BackButtonProps) => {
     imageStyle = {},
     colors = undefined,
     isHeader = false,
-    disabled = false
+    disabled = false,
+    parentStyle = {}
   } = props
   const navigation = useNavigation()
 
@@ -36,7 +38,7 @@ const BackButton = (props: BackButtonProps) => {
       return
     }
     navigation.goBack()
-  }, [onPress])
+  }, [navigation, onPress])
 
   const tint = {
     tintColor: Colors.ThemeColor
@@ -51,7 +53,17 @@ const BackButton = (props: BackButtonProps) => {
   }
 
   return (
-    <TouchableOpacity disabled={disabled} onPress={onPressBack}>
+    <TouchableOpacity
+      hitSlop={{
+        bottom: 20,
+        left: 20,
+        right: 20,
+        top: 20
+      }}
+      style={parentStyle}
+      disabled={disabled}
+      onPress={onPressBack}
+    >
       <LinearGradient
         colors={colors ?? [Colors.purpleShade8A63, Colors.purpleShadeB090]}
         start={{x: 0, y: 0}}

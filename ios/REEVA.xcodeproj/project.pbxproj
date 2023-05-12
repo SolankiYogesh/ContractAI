@@ -10,7 +10,6 @@
 		00E356F31AD99517003FC87E /* REEVATests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* REEVATests.m */; };
 		0C80B921A6F3F58F76C31292 /* libPods-REEVA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-REEVA.a */; };
 		0EAA103229BB22690083D6D7 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAA103129BB22690083D6D7 /* File.swift */; };
-		0ECC191F29C0392D00017D1F /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0ECC191E29C0392C00017D1F /* BootSplash.storyboard */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
@@ -39,7 +38,6 @@
 		00E356F21AD99517003FC87E /* REEVATests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REEVATests.m; sourceTree = "<group>"; };
 		0EAA103029BB22680083D6D7 /* REEVA-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "REEVA-Bridging-Header.h"; sourceTree = "<group>"; };
 		0EAA103129BB22690083D6D7 /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
-		0ECC191E29C0392C00017D1F /* BootSplash.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = BootSplash.storyboard; path = REEVA/BootSplash.storyboard; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* REEVA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = REEVA.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = REEVA/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = REEVA/AppDelegate.mm; sourceTree = "<group>"; };
@@ -48,14 +46,14 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = REEVA/main.m; sourceTree = "<group>"; };
 		15B35C02898446D480931265 /* Inter-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-ExtraBold.ttf"; path = "../assets/Fonts/Inter-ExtraBold.ttf"; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-REEVA-REEVATests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-REEVA-REEVATests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3B4392A12AC88292D35C810B /* Pods-REEVA.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA.debug.xcconfig"; path = "Target Support Files/Pods-REEVA/Pods-REEVA.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-REEVA.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA.release.xcconfig"; path = "Target Support Files/Pods-REEVA/Pods-REEVA.release.xcconfig"; sourceTree = "<group>"; };
-		5B7EB9410499542E8C5724F5 /* Pods-REEVA-REEVATests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA-REEVATests.debug.xcconfig"; path = "Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests.debug.xcconfig"; sourceTree = "<group>"; };
+		27C0C5CC8D23578FBE324670 /* Pods-REEVA.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA.release.xcconfig"; path = "Target Support Files/Pods-REEVA/Pods-REEVA.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-REEVA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-REEVA.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D4FD89FC9E08DF49AE5D213 /* Pods-REEVA-REEVATests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA-REEVATests.debug.xcconfig"; path = "Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests.debug.xcconfig"; sourceTree = "<group>"; };
 		7D67108A64EB4CF1BF3EB009 /* Inter-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Regular.ttf"; path = "../assets/Fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = REEVA/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		89C6BE57DB24E9ADA2F236DE /* Pods-REEVA-REEVATests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA-REEVATests.release.xcconfig"; path = "Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests.release.xcconfig"; sourceTree = "<group>"; };
 		9B14ACEF2D6740958AB60115 /* Inter-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Medium.ttf"; path = "../assets/Fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
+		9F925A48E6CE68EF9EF175D9 /* Pods-REEVA-REEVATests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA-REEVATests.release.xcconfig"; path = "Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests.release.xcconfig"; sourceTree = "<group>"; };
+		BAD3EC5B3759D37ECCB2FDC2 /* Pods-REEVA.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-REEVA.debug.xcconfig"; path = "Target Support Files/Pods-REEVA/Pods-REEVA.debug.xcconfig"; sourceTree = "<group>"; };
 		C1F22376DF8F477C8BBF9E02 /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-SemiBold.ttf"; path = "../assets/Fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FC2FF78A29D44EE39ABF09CD /* Inter-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Bold.ttf"; path = "../assets/Fonts/Inter-Bold.ttf"; sourceTree = "<group>"; };
@@ -105,7 +103,6 @@
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				0ECC191E29C0392C00017D1F /* BootSplash.storyboard */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
 			);
@@ -134,6 +131,17 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		2F9E47E11891BB10DBC2A7AE /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BAD3EC5B3759D37ECCB2FDC2 /* Pods-REEVA.debug.xcconfig */,
+				27C0C5CC8D23578FBE324670 /* Pods-REEVA.release.xcconfig */,
+				7D4FD89FC9E08DF49AE5D213 /* Pods-REEVA-REEVATests.debug.xcconfig */,
+				9F925A48E6CE68EF9EF175D9 /* Pods-REEVA-REEVATests.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,9 +158,9 @@
 				00E356EF1AD99517003FC87E /* REEVATests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				15BFE6B6A6844348A27BCF3A /* Resources */,
 				0EAA103029BB22680083D6D7 /* REEVA-Bridging-Header.h */,
+				2F9E47E11891BB10DBC2A7AE /* Pods */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -168,17 +176,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				3B4392A12AC88292D35C810B /* Pods-REEVA.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-REEVA.release.xcconfig */,
-				5B7EB9410499542E8C5724F5 /* Pods-REEVA-REEVATests.debug.xcconfig */,
-				89C6BE57DB24E9ADA2F236DE /* Pods-REEVA-REEVATests.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -191,6 +188,7 @@
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
 				F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */,
+				58294AED823A2A02699AE02F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -213,6 +211,7 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				3B670F4CD49EC36886FC26DE /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -274,7 +273,6 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				DBF907731CEC40AB85538C4A /* Inter-Bold.ttf in Resources */,
-				0ECC191F29C0392D00017D1F /* BootSplash.storyboard in Resources */,
 				E5BCC7DE73FA4D9F8BAA1402 /* Inter-ExtraBold.ttf in Resources */,
 				5C1530A686504C708A6937D8 /* Inter-Medium.ttf in Resources */,
 				344BB8153DF7425A8A37E9B5 /* Inter-Regular.ttf in Resources */,
@@ -300,6 +298,40 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+		};
+		3B670F4CD49EC36886FC26DE /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-REEVA/Pods-REEVA-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-REEVA/Pods-REEVA-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-REEVA/Pods-REEVA-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		58294AED823A2A02699AE02F /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-REEVA-REEVATests/Pods-REEVA-REEVATests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -432,7 +464,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5B7EB9410499542E8C5724F5 /* Pods-REEVA-REEVATests.debug.xcconfig */;
+			baseConfigurationReference = 7D4FD89FC9E08DF49AE5D213 /* Pods-REEVA-REEVATests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -461,7 +493,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 89C6BE57DB24E9ADA2F236DE /* Pods-REEVA-REEVATests.release.xcconfig */;
+			baseConfigurationReference = 9F925A48E6CE68EF9EF175D9 /* Pods-REEVA-REEVATests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -487,7 +519,7 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-REEVA.debug.xcconfig */;
+			baseConfigurationReference = BAD3EC5B3759D37ECCB2FDC2 /* Pods-REEVA.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -496,6 +528,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KDMD3AYT4S;
 				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				INFOPLIST_FILE = REEVA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -522,7 +555,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-REEVA.release.xcconfig */;
+			baseConfigurationReference = 27C0C5CC8D23578FBE324670 /* Pods-REEVA.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -530,6 +563,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KDMD3AYT4S;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				INFOPLIST_FILE = REEVA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -586,7 +620,7 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -658,7 +692,7 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

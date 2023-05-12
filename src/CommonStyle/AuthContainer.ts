@@ -21,19 +21,10 @@ export const CreateAnAccountText = styled.Text`
   color: ${Colors.greyShade9797};
   text-align: ${(props: any) => (props.isCenter ? 'center' : 'left')};
   margin-bottom: ${(props: any) => props?.marginBottom || 10}px;
-  margin-top: ${(props: any) => (props.isCenter ? verticalScale(30) : 0)}px;
-  margin-bottom: ${(props: any) => (props.isCenter ? verticalScale(30) : verticalScale(5))}px;
+  margin-top: ${(props: any) => (props.isCenter ? verticalScale(25) : 0)}px;
+  margin-bottom: ${(props: any) => (props.isCenter ? verticalScale(25) : verticalScale(5))}px;
   margin-left: ${(props: any) => props?.marginHorizontal || 0}px;
   margin-right: ${(props: any) => props?.marginHorizontal || 0}px;
-`
-
-export const AlreadyAccountText = styled.Text`
-  font-family: ${Fonts.ThemeMedium};
-  font-size: ${moderateScale(14)}px;
-  color: ${(props: any) => (!props.isClickable ? Colors.blackShade2A30 : Colors.ThemeColor)};
-  margin-top: ${verticalScale(30)}px;
-  margin-bottom: ${verticalScale(30)}px;
-  text-align: center;
 `
 
 export const ButtonContainer = styled.View`

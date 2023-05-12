@@ -18,6 +18,7 @@ import {Images} from '../Theme'
 import Colors from '../Theme/Colors'
 import {Fonts} from '../Theme/Fonts'
 import {heightPx, INPUT_HEIGHT, moderateScale, scale, verticalScale} from '../Theme/Responsive'
+import ErrorText from './ErrorText'
 
 interface AppInputProps extends TextInputProps {
   placeholder?: string
@@ -32,6 +33,8 @@ interface AppInputProps extends TextInputProps {
   editable?: boolean
   isEye?: boolean
   isGradient?: boolean
+  error?: string
+  parentStyle?: StyleProp<TextStyle>
 }
 
 const AppInput = forwardRef((props: AppInputProps, ref: any) => {
@@ -46,7 +49,9 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
     onPress,
     editable = true,
     isEye = false,
-    isGradient = false
+    isGradient = false,
+    error = '',
+    parentStyle = {}
   } = props
   const [isPassword, setIsPassword] = useState(false)
   const [isFocus, setISFocus] = useState(false)
@@ -58,7 +63,7 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
   }, [props.isPassword])
 
   return (
-    <TouchableOpacity disabled={!onPress} onPress={onPress}>
+    <TouchableOpacity style={parentStyle} disabled={!onPress} onPress={onPress}>
       <LinearGradient
         colors={
           isGradient
@@ -106,6 +111,7 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
           </EyeContainer>
         )}
       </LinearGradient>
+      {!!error && <ErrorText errorText={error} />}
     </TouchableOpacity>
   )
 })
@@ -139,7 +145,7 @@ const styles = StyleSheet.create({
     height: '70%'
   },
   input: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(15),
     color: Colors.blackShade2A30,
     fontFamily: Fonts.ThemeRegular,
     flex: 1,

@@ -34,10 +34,11 @@ const AppAlertModal = (props: AppAlertModalProps) => {
         <BackButton
           onPress={onClose}
           imageStyle={styles.imageStyle}
-          style={styles.closeImage}
+          parentStyle={styles.closeImage}
           image={Images.close}
+          isHeader
         />
-        {image && <ImageContainer source={image} resizeMode={"contain"} />}
+        {image && <ImageContainer source={image} resizeMode={'contain'} />}
         <InnerContainer>
           <GettingText isCenter>{topText}</GettingText>
           <CreateAnAccountText isCenter>{middleText}</CreateAnAccountText>
@@ -86,7 +87,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: scale(10),
     top: verticalScale(10),
-    backgroundColor: Colors.greyShadeEFF
+    backgroundColor: Colors.greyShadeEFF,
+    borderRadius: moderateScale(15)
   },
   imageStyle: {
     width: '45%',

@@ -1,5 +1,12 @@
 import React from 'react'
-import {ImageSourcePropType, ImageStyle, StyleProp, TextStyle, ViewStyle} from 'react-native'
+import {
+  ImageSourcePropType,
+  ImageStyle,
+  StyleProp,
+  StyleSheet,
+  TextStyle,
+  ViewStyle
+} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import styled from 'styled-components/native'
 
@@ -16,6 +23,7 @@ interface AppButtonProps {
   leftImage?: ImageSourcePropType
   leftImageStyle?: StyleProp<ImageStyle>
   isGradient?: boolean
+  disabled?: boolean
 }
 
 const AppButton = (props: AppButtonProps) => {
@@ -26,26 +34,31 @@ const AppButton = (props: AppButtonProps) => {
     textStyle = {},
     title = '',
     leftImage,
-    isGradient = true
+    isGradient = true,
+    disabled = false
   } = props
   return (
-    <ButtonContainer style={style} onPress={onPress}>
+    <ButtonContainer disabled={disabled} style={style} onPress={onPress}>
       <LinearGradient
         colors={
-          isGradient
+          isGradient && !disabled
             ? [Colors.purpleShad8A, Colors.purpleShadB0]
+            : disabled
+            ? [Colors.greyOutColor, Colors.greyOutColor]
             : [Colors.transparent, Colors.transparent]
         }
         start={{x: 0, y: 0}}
         end={{x: 1, y: 1}}
         angle={91.48}
-        style={[CommonStyles.flex, CommonStyles.centerItem]}
+        style={[CommonStyles.flex, CommonStyles.centerItem, disabled && styles.disabledButton]}
       >
         <InnerView>
           {!!leftImage && (
             <LeftImageContainer style={leftImageStyle} source={leftImage} resizeMode={'contain'} />
           )}
-          <TitleText style={textStyle}>{title}</TitleText>
+          <TitleText disabled={disabled} style={textStyle}>
+            {title}
+          </TitleText>
         </InnerView>
       </LinearGradient>
     </ButtonContainer>
@@ -65,7 +78,7 @@ const ButtonContainer = styled.TouchableOpacity`
 
 const TitleText = styled.Text`
   font-family: ${Fonts.ThemeSemiBold};
-  color: ${Colors.white};
+  color: ${(props: any) => (props?.disabled ? Colors.greyShade595 : Colors.white)};
   font-size: ${moderateScale(15)}px;
 `
 
@@ -82,3 +95,9 @@ const InnerView = styled.View`
   align-self: center;
   justify-content: center;
 `
+const styles = StyleSheet.create({
+  disabledButton: {
+    borderWidth: 2,
+    borderColor: Colors.greyShadeE8
+  }
+})

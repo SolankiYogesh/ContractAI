@@ -26,6 +26,7 @@ export default {
   lightPurple: '#E9E2FD',
   greyShadeDDD: '#DDDDDD',
   greyShadeBBB: '#BBBFD0',
+  greyShade020: '#02050F',
   purpleShade8A63: 'rgba(138, 99, 244, 0.1)',
   purpleShadeB090: 'rgba(176, 144, 255, 0.1)',
   greyShadeB4B6: '#B4B6B8',
@@ -34,5 +35,8 @@ export default {
   blackShade236: '#263238',
   greyShadeUnk: 'rgba(38, 50, 56, 0.36)',
   redShade: '#FF8092',
-  purpleEEE: '#EEE9FA'
+  purpleEEE: '#EEE9FA',
+  greyOutColor: '#bdc3c7',
+  black121928: '#121928',
+  backDrop: 'rgba(0, 0, 0, 0.5)'
 }

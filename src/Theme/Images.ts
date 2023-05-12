@@ -43,7 +43,9 @@ export default {
   log_out2: require('../Resources/Images/log_out2.png'),
   userProfileback: require('../Resources/Images/userProfileback.png'),
   pencil: require('../Resources/Images/pencil.png'),
-  camera: require('../Resources/Images/camera.png'),
   buyerSeller: require('../Resources/Images/buyerSeller.png'),
-  send: require('../Resources/Images/send.png')
+  send: require('../Resources/Images/send.png'),
+  loader: require('../Resources/Animations/loader.json'),
+  logo: require('../Resources/Images/logo.png'),
+  themeAnimation: require('../Resources/Animations/themeAnimation.json')
 }

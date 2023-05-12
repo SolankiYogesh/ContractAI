@@ -2,6 +2,7 @@
 import Animated, {
   AnimationCallback,
   Easing,
+  ExtrapolationType,
   interpolate,
   useDerivedValue,
   withTiming,
@@ -50,7 +51,7 @@ export const useInterpolate = (
   progress: Animated.SharedValue<number>,
   input: number[],
   output: number[],
-  type?: Animated.Extrapolate
+  type?: ExtrapolationType
 ) => useDerivedValue(() => interpolate(progress.value, input, output, type))
 export const sharedRound = (value: number) => {
   'worklet'

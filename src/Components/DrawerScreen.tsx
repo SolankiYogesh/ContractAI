@@ -1,13 +1,16 @@
 import React, {useCallback, useEffect} from 'react'
-import {ScrollView} from 'react-native'
+import {Alert, ScrollView, TouchableOpacity} from 'react-native'
+import {useDispatch, useSelector} from 'react-redux'
 import {DrawerContentComponentProps, DrawerItem, useDrawerStatus} from '@react-navigation/drawer'
 import {CommonActions} from '@react-navigation/native'
 import styled from 'styled-components/native'
 
+import {logOut} from '../Redux/Reducers/UserSlice'
 import English from '../Resources/Locales/English'
 import {Colors, Images, Screens} from '../Theme'
 import {Fonts} from '../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../Theme/Responsive'
+import Utility from '../Theme/Utility'
 import AppProfileIcon from './AppProfileIcon'
 
 interface DrawerScreenProps extends DrawerContentComponentProps {
@@ -15,16 +18,17 @@ interface DrawerScreenProps extends DrawerContentComponentProps {
 }
 
 const DrawerScreen = (props: DrawerScreenProps) => {
-  const {navigation, state} = props
+  const {navigation, state, onToggle} = props
   const status = useDrawerStatus()
-
+  const dispatch = useDispatch()
   const onPressClose = useCallback(() => {
     navigation.closeDrawer()
   }, [navigation])
+  const user = useSelector((state: any) => state?.user?.userData)
 
   useEffect(() => {
-    props.onToggle(status === 'open')
-  }, [status])
+    onToggle(status === 'open')
+  }, [onToggle, status])
 
   const onPressScreen = useCallback(
     (screen: string) => {
@@ -36,24 +40,64 @@ const DrawerScreen = (props: DrawerScreenProps) => {
   )
 
   const onPressLogOut = useCallback(() => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [{name: Screens.LoginScreen}]
-      })
+    Alert.alert(
+      'Reeva',
+      'Are you sure you want to log out ?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            Utility.destroyVoice()
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 1,
+                routes: [
+                  {
+                    name: Screens.AuthKey,
+                    params: {
+                      isLogOut: true
+                    }
+                  }
+                ]
+              })
+            )
+            dispatch(logOut())
+          }
+        }
+      ],
+      {userInterfaceStyle: 'light'}
     )
+  }, [dispatch, navigation])
+
+  const onPressProfile = useCallback(() => {
+    navigation.navigate(Screens.UserProfileScreen)
   }, [navigation])
 
   return (
     <>
       <Container>
-        <ImageBackContainer source={Images.draw_back}>
-          <AppProfileIcon size={85} borderRadius={300} url={'https://i.ibb.co/5nRvPXV/User.png'} />
-          <TextView>
-            <TextUsername>{'John Smith'}</TextUsername>
-            <TextEmail>{'johnsmith@mail.com'}</TextEmail>
-          </TextView>
-        </ImageBackContainer>
+        <TouchableOpacity onPress={onPressProfile}>
+          <ImageBackContainer source={Images.draw_back}>
+            <AppProfileIcon
+              size={85}
+              style={{marginHorizontal: scale(10)}}
+              borderRadius={300}
+              url={user?.profile_image}
+            />
+            <TextView>
+              <TextUsername adjustsFontSizeToFit numberOfLines={1}>
+                {user?.first_name + ' ' + user?.last_name}
+              </TextUsername>
+              <TextEmail adjustsFontSizeToFit numberOfLines={1}>
+                {user?.email}
+              </TextEmail>
+            </TextView>
+          </ImageBackContainer>
+        </TouchableOpacity>
         <ScrollView showsVerticalScrollIndicator={false}>
           <DrawerItem
             {...props}
@@ -137,8 +181,8 @@ const DrawerScreen = (props: DrawerScreenProps) => {
 
 export default DrawerScreen
 const Icon = styled.Image`
-  width: ${verticalScale(24)}px;
-  height: ${verticalScale(24)}px;
+  width: ${verticalScale(20)}px;
+  height: ${verticalScale(20)}px;
 `
 const ImageBackContainer = styled.ImageBackground`
   width: 100%;
@@ -155,6 +199,7 @@ const TextContainer = styled.Text`
 `
 const TextView = styled.View`
   margin-left: ${scale(10)}px;
+  flex: 1;
 `
 const TextUsername = styled.Text`
   font-family: ${Fonts.ThemeBold};
@@ -178,8 +223,8 @@ export const Container = styled.View`
   margin-bottom: ${verticalScale(10)}px;
 `
 export const CloseImageContainer = styled.TouchableOpacity`
-  width: ${verticalScale(25)}px;
-  height: ${verticalScale(25)}px;
+  width: ${verticalScale(40)}px;
+  height: ${verticalScale(40)}px;
   position: absolute;
   background-color: ${Colors.ThemeColor};
   border-radius: ${moderateScale(300)}px;
@@ -194,7 +239,7 @@ export const CloseImageContainer = styled.TouchableOpacity`
 `
 
 export const CloseImage = styled.Image`
-  width: 60%;
-  height: 60%;
+  width: 40%;
+  height: 40%;
   tint-color: white;
 `
