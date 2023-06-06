@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect} from 'react'
-import {Alert, ScrollView, TouchableOpacity} from 'react-native'
+import {Alert, Image, ScrollView, TouchableOpacity} from 'react-native'
 import {useDispatch, useSelector} from 'react-redux'
 import {DrawerContentComponentProps, DrawerItem, useDrawerStatus} from '@react-navigation/drawer'
 import {CommonActions} from '@react-navigation/native'
@@ -80,7 +80,7 @@ const DrawerScreen = (props: DrawerScreenProps) => {
   return (
     <>
       <Container>
-        <TouchableOpacity onPress={onPressProfile}>
+        <TouchableOpacity activeOpacity={1} onPress={onPressProfile}>
           <ImageBackContainer source={Images.draw_back}>
             <AppProfileIcon
               size={85}
@@ -102,13 +102,31 @@ const DrawerScreen = (props: DrawerScreenProps) => {
           <DrawerItem
             {...props}
             activeBackgroundColor={Colors.transparent}
+            pressColor={Colors.transparent}
             onPress={() => onPressScreen(Screens.VoiceChatScreen)}
             focused={state.routeNames[state.index] === Screens.VoiceChatScreen}
             icon={({focused}) => (
-              <Icon
-                source={Images.offers}
+              <Image
+                source={Images.Home}
                 style={{
                   tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
+                }}
+              />
+            )}
+            label={({focused}) => <TextContainer focus={focused}>{English.R184}</TextContainer>}
+          />
+          <DrawerItem
+            {...props}
+            activeBackgroundColor={Colors.transparent}
+            pressColor={Colors.transparent}
+            onPress={() => onPressScreen(Screens.OffersScreen)}
+            focused={state.routeNames[state.index] === Screens.OffersScreen}
+            icon={({focused}) => (
+              <Image
+                source={Images.offers}
+                style={{
+                  tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB,
+                  width: scale(18)
                 }}
               />
             )}
@@ -116,10 +134,12 @@ const DrawerScreen = (props: DrawerScreenProps) => {
           />
           <DrawerItem
             {...props}
+            activeBackgroundColor={Colors.transparent}
+            pressColor={Colors.transparent}
             onPress={() => onPressScreen(Screens.ContactListScreen)}
             focused={state.routeNames[state.index] === Screens.ContactListScreen}
             icon={({focused}) => (
-              <Icon
+              <Image
                 source={Images.myContacts}
                 style={{
                   tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
@@ -130,10 +150,12 @@ const DrawerScreen = (props: DrawerScreenProps) => {
           />
           <DrawerItem
             {...props}
+            activeBackgroundColor={Colors.transparent}
+            pressColor={Colors.transparent}
             focused={state.routeNames[state.index] === Screens.EmailTemplateScreen}
             onPress={() => onPressScreen(Screens.EmailTemplateScreen)}
             icon={({focused}) => (
-              <Icon
+              <Image
                 source={Images.email_templates}
                 style={{
                   tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
@@ -142,14 +164,32 @@ const DrawerScreen = (props: DrawerScreenProps) => {
             )}
             label={({focused}) => <TextContainer focus={focused}>{English.R101}</TextContainer>}
           />
+          <DrawerItem
+            {...props}
+            activeBackgroundColor={Colors.transparent}
+            pressColor={Colors.transparent}
+            focused={state.routeNames[state.index] === Screens.PremiumPlanScreen}
+            onPress={() => onPressScreen(Screens.PremiumPlanScreen)}
+            icon={({focused}) => (
+              <Image
+                source={Images.plan}
+                style={{
+                  tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
+                }}
+              />
+            )}
+            label={({focused}) => <TextContainer focus={focused}>{English.R124}</TextContainer>}
+          />
         </ScrollView>
 
         <DrawerItem
           {...props}
+          activeBackgroundColor={Colors.transparent}
+          pressColor={Colors.transparent}
           focused={state.routeNames[state.index] === Screens.SettingScreen}
           onPress={() => onPressScreen(Screens.SettingScreen)}
           icon={({focused}) => (
-            <Icon
+            <Image
               source={Images.setting}
               style={{
                 tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
@@ -160,9 +200,11 @@ const DrawerScreen = (props: DrawerScreenProps) => {
         />
         <DrawerItem
           {...props}
+          activeBackgroundColor={Colors.transparent}
+          pressColor={Colors.transparent}
           onPress={onPressLogOut}
           icon={({focused}) => (
-            <Icon
+            <Image
               source={Images.logout}
               style={{
                 tintColor: focused ? Colors.ThemeColor : Colors.greyShadeBBB
@@ -180,10 +222,7 @@ const DrawerScreen = (props: DrawerScreenProps) => {
 }
 
 export default DrawerScreen
-const Icon = styled.Image`
-  width: ${verticalScale(20)}px;
-  height: ${verticalScale(20)}px;
-`
+
 const ImageBackContainer = styled.ImageBackground`
   width: 100%;
   height: ${verticalScale(150)}px;
@@ -195,7 +234,7 @@ const ImageBackContainer = styled.ImageBackground`
 const TextContainer = styled.Text`
   font-family: ${(props: any) => (props?.focus ? Fonts.ThemeBold : Fonts.ThemeMedium)};
   font-size: ${moderateScale(15)}px;
-  color: ${(props: any) => (props?.focus ? Colors.blackShade2A30 : Colors.greyShadeBBB)};
+  color: ${(props: any) => (props?.focus ? Colors.ThemeColor : Colors.greyShadeBBB)};
 `
 const TextView = styled.View`
   margin-left: ${scale(10)}px;

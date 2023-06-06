@@ -1,15 +1,19 @@
-import React, {useCallback, useEffect, useState} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
-import {useNavigation} from '@react-navigation/native'
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native'
+import _ from 'lodash'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
+import EmptyComponent from '../../../Components/EmptyComponent'
 import English from '../../../Resources/Locales/English'
-import {Screens} from '../../../Theme'
+import {Colors, Images, Screens} from '../../../Theme'
+import {CommonStyles} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
+import Utility from '../../../Theme/Utility'
 import OfferItem from './Components/OfferItem'
 
 const data = [
@@ -40,16 +44,28 @@ const OffersScreen = () => {
   const navigation: any = useNavigation()
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isLoading, setISLoading] = useState(true)
-  const [offers, setOffers] = useState([])
+  const [offers, setOffers] = useState<any[]>([])
+  const route: any = useRoute()?.params
+  const isFocus = useIsFocused()
+  const isFirst = useRef(true)
 
-  useEffect(() => {
-    setISLoading(true)
+  const contactDetails = route?.data
+  const isDrawer = route?.isDrawer
+
+  const getOffer = useCallback(async (isLoader = true) => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
+    isFirst.current = false
+    setISLoading(isLoader)
     APICall('get', {}, EndPoints.getOffers)
       .then((resp: any) => {
         setISLoading(false)
 
         if (resp?.status === 200 && resp?.data?.contracts) {
-          setOffers(resp?.data?.contracts)
+          const sortingData: any[] = _.orderBy(resp?.data?.contracts, (t) => t?.created, 'desc')
+          setOffers(sortingData)
         }
       })
       .catch(() => {
@@ -57,14 +73,30 @@ const OffersScreen = () => {
       })
   }, [])
 
+  useEffect(() => {
+    getOffer()
+  }, [getOffer])
+
+  useEffect(() => {
+    if (isFocus && !isFirst.current) {
+      getOffer(false)
+    }
+  }, [isFocus, getOffer])
+
   const onPressOffer = useCallback(
     (contactItem: any) => {
+      if (!contactDetails?.email) {
+        navigation.push(Screens.ContactListScreen, {
+          offerItem: contactItem
+        })
+        return
+      }
       navigation.navigate(Screens.OfferDetailsScreen, {
-        contactItem,
+        contactItem: {...(contactItem || {}), email: contactDetails?.email},
         isOfferScreen: true
       })
     },
-    [navigation]
+    [contactDetails, navigation]
   )
 
   const onPressItem = useCallback(
@@ -76,10 +108,16 @@ const OffersScreen = () => {
 
   return (
     <AppContainer>
-      <AppHeader isBack title={English.R154} />
+      <AppHeader
+        isMenu={isDrawer}
+        isBack={!isDrawer}
+        title={isDrawer ? English.R103 : English.R154}
+      />
       <FlatList
         showsVerticalScrollIndicator={false}
         data={isLoading ? data : offers}
+        ListEmptyComponent={() => <EmptyComponent />}
+        contentContainerStyle={offers.length === 0 && !isLoading && CommonStyles.flex}
         keyExtractor={(item: any) => item?.id}
         renderItem={({item, index}) => (
           <OfferItem
@@ -91,12 +129,15 @@ const OffersScreen = () => {
           />
         )}
       />
-      <AppButton
-        disabled={isLoading}
-        style={styles.input}
-        onPress={() => onPressOffer(offers[selectedIndex])}
-        title={English.R166}
-      />
+      {!(isLoading || offers?.length === 0) && (
+        <AppButton
+          style={styles.input}
+          onPress={() => onPressOffer(offers[selectedIndex])}
+          title={English.R166}
+          leftImage={Images.send_email}
+          leftImageStyle={styles.leftImageStyle}
+        />
+      )}
     </AppContainer>
   )
 }
@@ -107,5 +148,10 @@ const styles = StyleSheet.create({
     width: '90%',
     alignSelf: 'center',
     marginBottom: verticalScale(20)
+  },
+  leftImageStyle: {
+    tintColor: Colors.white,
+    width: verticalScale(25),
+    height: verticalScale(25)
   }
 })

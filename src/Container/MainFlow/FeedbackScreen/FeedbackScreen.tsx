@@ -32,34 +32,39 @@ const FeedbackScreen = () => {
   const user = useSelector((state: any) => state?.user?.userData)
 
   useEffect(() => {
-    setISEnabled(!!(Utility.isEmpty(subject) && Utility.isEmpty(message)))
+    setISEnabled(!!(Utility.isEmpty(subject) && Utility.isEmpty(message) && message.length > 19))
   }, [subject, message])
 
-  const onPressSubmit = useCallback(() => {
+  const onPressSubmit = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const payload = {
       email: user?.email,
       subject,
       message
     }
     Loader.isLoading(true)
-    APICall('post', payload, EndPoints.reportIssue).then((resp: any) => {
-      Loader.isLoading(false)
+    APICall('post', payload, EndPoints.reportIssue)
+      .then(async (resp: any) => {
+        Loader.isLoading(false)
 
-      if (resp?.status === 200) {
-        setTimeout(() => {
+        if (resp?.status === 200) {
+          await Utility.wait()
           setISModal(true)
-        }, 1000)
-      } else {
-        Utility.showAlert(resp?.data?.message)
-      }
-    })
+        } else {
+          Utility.showAlert(resp?.data?.message)
+        }
+      })
+      .catch(() => Loader.isLoading(false))
   }, [subject, message, setISModal, user])
 
   return (
     <AppContainer>
       <ScrollContainer>
+        <BackButton />
         <AppScrollView>
-          <BackButton />
           <GettingText>{English.R55}</GettingText>
           <CreateAnAccountText>{English.R56}</CreateAnAccountText>
           <AppInput
@@ -81,24 +86,26 @@ const FeedbackScreen = () => {
             onChangeText={setMessage}
           />
         </AppScrollView>
-        <AppButton
-          disabled={!isEnabled}
-          style={styles.width}
-          onPress={onPressSubmit}
-          title={English.R59}
-        />
       </ScrollContainer>
+      <AppButton
+        disabled={!isEnabled}
+        style={[styles.width, styles.marginBottom]}
+        onPress={onPressSubmit}
+        title={English.R59}
+      />
 
-      {isModal && (
-        <AppAlertModal
-          middleText={English.R61}
-          topText={English.R60}
-          btnText={English.R62}
-          onPress={() => navigation.goBack()}
-          image={Images.feedback}
-          onClose={() => setISModal(false)}
-        />
-      )}
+      <AppAlertModal
+        isVisible={isModal}
+        middleText={English.R61}
+        topText={English.R60}
+        btnText={English.R62}
+        onPress={() => navigation.goBack()}
+        image={Images.feedback}
+        onClose={() => {
+          setISModal(false)
+          navigation.goBack()
+        }}
+      />
     </AppContainer>
   )
 }

@@ -90,6 +90,8 @@ export interface TabBarItemProps extends TabConfigsType {
   focused: boolean
 
   onPress?: (index: number) => void
+
+  isTouchable?: boolean
 }
 export interface DotProps {
   /**

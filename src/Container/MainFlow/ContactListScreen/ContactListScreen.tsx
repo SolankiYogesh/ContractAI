@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {SectionList, StyleSheet} from 'react-native'
-import {useRoute} from '@react-navigation/native'
-import Skeleton from '@thevsstech/react-native-skeleton'
+import {Alert, RefreshControl, StyleSheet} from 'react-native'
+import {openSettings} from 'react-native-permissions'
+import Animated, {FadeInUp, FadeOutDown} from 'react-native-reanimated'
+import {useIsFocused, useRoute} from '@react-navigation/native'
 import _ from 'lodash'
 import styled from 'styled-components/native'
 
@@ -11,12 +12,15 @@ import EndPoints from '../../../APIRequest/EndPoints'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import AppInput from '../../../Components/AppInput'
-import EmptyComponent from '../../../Components/EmptyComponent'
+import AppScrollView from '../../../Components/AppScrollView'
+import CustomSectionList from '../../../Components/CustomSectionList'
+import LoadingView from '../../../Components/LoadingView'
 import English from '../../../Resources/Locales/English'
 import {Colors, Images} from '../../../Theme'
 import {CommonStyles} from '../../../Theme/CommonStyles'
 import {Fonts} from '../../../Theme/Fonts'
-import {moderateScale, scale, verticalScale, widthPx} from '../../../Theme/Responsive'
+import Permission from '../../../Theme/Permission'
+import {moderateScale, scale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 import ShareItem from '../OffersScreen/OfferDetailsScreen/Components/ShareItem'
 import ContactItem from './Components/ContactItem'
@@ -28,28 +32,42 @@ const ContactListScreen = () => {
   const route: any = useRoute().params
   const isDrawer = route?.isDrawer
   const isFromTemplate = route?.isFromTemplate
+  const isFocus = useIsFocused()
+  const [isRefreshing, setISRefreshing] = useState(false)
+
   const templateItem = route?.item
   const [isSheet, setISSheet] = useState(false)
+  const offerItem = route?.offerItem
 
   const [isLoading, setISLoading] = useState(true)
 
   const [search, setSearch] = useState('')
 
-  const getAllContactSync = useCallback((isLoader = true) => {
+  const getAllContactSync = useCallback(async (isLoader = true, isRefresh = false) => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     setISLoading(isLoader)
+    setISRefreshing(isRefresh)
     APICall('get', {}, EndPoints.getContacts)
       .then((resp: any) => {
         setISLoading(false)
-        if (resp?.status === 200 && resp?.data?.data?.length > 0) {
-          const formateData = _.map(resp?.data?.data, (i, index) => {
+        setISRefreshing(false)
+        if ((resp?.status === 200 || resp?.status === 400) && resp?.data?.data) {
+          const formateData = _.map(resp?.data?.data || [], (i) => {
             return {
               ...i,
-              key: `${Math.random()}${i?.value}${index}`,
               value: i?.name
             }
           })
-          setContacts(formateData)
-          allContactRef.current = formateData
+          const filterNumbers = _.filter(
+            formateData,
+            (i) => i?.number !== 'n/a' && i?.number !== 'null' && !!i?.number
+          )
+
+          setContacts(filterNumbers)
+          allContactRef.current = filterNumbers
         }
       })
       .catch(() => {
@@ -58,40 +76,14 @@ const ContactListScreen = () => {
   }, [])
 
   useEffect(() => {
-    getAllContactSync()
-  }, [])
+    if (isFocus) {
+      getAllContactSync(false)
+    }
+  }, [isFocus])
 
   useEffect(() => {
-    if (!Utility.isEmpty(search)) {
-      setContacts(allContactRef.current)
-    } else {
-      const filter = _.filter(allContactRef.current, (i: any) => {
-        return i?.value?.toLowerCase().indexOf(search?.toLowerCase()) > -1
-      })
-      setContacts(filter)
-    }
-  }, [search])
-
-  const onUserUpdate = useCallback(
-    (users: any[]) => {
-      let cloneData = Utility.deepClone(contacts)
-
-      _.map(users, (i, index) => {
-        if (i?.to_add) {
-          cloneData.push({
-            ...i,
-            key: `${Math.random()}${i?.value}${index}`,
-            value: i?.name
-          })
-        } else {
-          cloneData = _.filter(cloneData, (item: any) => item?.number !== i?.number)
-        }
-      })
-
-      setContacts(cloneData)
-    },
-    [contacts]
-  )
+    getAllContactSync()
+  }, [])
 
   const renderSearchInput = useMemo(() => {
     return (
@@ -107,30 +99,20 @@ const ContactListScreen = () => {
     )
   }, [setSearch, search])
 
-  const renderTitle = useCallback(
-    ({section: {title}}: any) => {
-      return !isLoading || isFromTemplate ? (
-        <TitleText>{title}</TitleText>
-      ) : (
-        <Skeleton>
-          <Skeleton.Item
-            marginLeft={scale(20)}
-            width={widthPx(10)}
-            height={verticalScale(25)}
-            borderRadius={4}
-          />
-        </Skeleton>
-      )
-    },
-    [isLoading, isFromTemplate]
-  )
+  const renderTitle = useCallback(({section: {title}}: any) => {
+    return <TitleText>{title}</TitleText>
+  }, [])
 
   const renderItem = useCallback(
-    ({item}: any) => {
-      return isFromTemplate ? (
-        <ShareItem key={item?.id} offerItem={templateItem} item={item} />
-      ) : (
-        <ContactItem key={item?.id} isLoading={isLoading} item={item} />
+    ({item, index}: any) => {
+      return (
+        <Animated.View key={item?.id} entering={FadeInUp.delay(index * 10)} exiting={FadeOutDown}>
+          {isFromTemplate ? (
+            <ShareItem key={item?.id} offerItem={templateItem} item={item} />
+          ) : (
+            <ContactItem offerItem={offerItem} key={item?.id} isLoading={isLoading} item={item} />
+          )}
+        </Animated.View>
       )
     },
     [templateItem, isFromTemplate, isLoading]
@@ -148,38 +130,65 @@ const ContactListScreen = () => {
       .value()
 
     return (
-      <SectionList
+      <CustomSectionList
         sections={DATA}
-        keyboardShouldPersistTaps={'always'}
-        stickySectionHeadersEnabled
-        ListEmptyComponent={() => <EmptyComponent />}
-        showsVerticalScrollIndicator={false}
+        searchAttribute={'value'}
+        searchTerm={search}
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => getAllContactSync(false, true)}
+            refreshing={isRefreshing}
+          />
+        }
         keyExtractor={(item) => item?.id}
         renderItem={renderItem}
-        contentContainerStyle={DATA.length === 0 && CommonStyles.flex}
         renderSectionHeader={renderTitle}
       />
     )
-  }, [contacts, renderItem, renderTitle])
+  }, [contacts, renderItem, search, renderTitle, isLoading, getAllContactSync])
+
+  const onPressSync = useCallback(async () => {
+    const isContact = await Permission.getContactPermission()
+    if (isContact) {
+      setISSheet(true)
+    } else {
+      Alert.alert(
+        'Reeva',
+        'Please allow permission to access contacts',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {text: 'Change Permission', onPress: () => openSettings()}
+        ],
+        {userInterfaceStyle: 'light'}
+      )
+    }
+  }, [])
 
   return (
     <AppContainer style={CommonStyles.flex}>
-      <AppHeader
-        isMenu={isDrawer}
-        isBack={!isDrawer}
-        title={English.R69}
-        rightImage={!isFromTemplate && Images.sync}
-        onPressRight={() => setISSheet(true)}
-      />
-      {renderSearchInput}
-      {renderList}
-      {isSheet && (
-        <ContactSelectListSheet
-          usersData={contacts}
-          onUserUpdate={onUserUpdate}
-          onClose={() => setISSheet(false)}
+      <AppScrollView scrollEnabled={false} contentContainerStyle={CommonStyles.flex}>
+        <AppHeader
+          isMenu={isDrawer}
+          isBack={!isDrawer}
+          title={English.R102}
+          rightImage={Images.sync}
+          onPressRight={onPressSync}
         />
-      )}
+        {renderSearchInput}
+        {!isLoading ? renderList : <LoadingView />}
+        {isSheet && (
+          <ContactSelectListSheet
+            usersData={contacts}
+            onClose={() => {
+              setISSheet(false)
+              getAllContactSync(false, false)
+            }}
+          />
+        )}
+      </AppScrollView>
     </AppContainer>
   )
 }

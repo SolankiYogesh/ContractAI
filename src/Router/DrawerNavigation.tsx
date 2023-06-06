@@ -5,6 +5,8 @@ import {createDrawerNavigator} from '@react-navigation/drawer'
 import DrawerScreen from '../Components/DrawerScreen'
 import ContactListScreen from '../Container/MainFlow/ContactListScreen/ContactListScreen'
 import EmailTemplateScreen from '../Container/MainFlow/EmailTemplateScreen/EmailTemplateScreen'
+import OffersScreen from '../Container/MainFlow/OffersScreen/OffersScreen'
+import PremiumPlanScreen from '../Container/MainFlow/PremiumPlanScreen/PremiumPlanScreen'
 import SettingScreen from '../Container/MainFlow/SettingScreen/SettingScreen'
 import VoiceChatScreen from '../Container/MainFlow/VoiceChatScreen/VoiceChatScreen'
 import {Colors, Screens} from '../Theme'
@@ -53,6 +55,20 @@ const DrawerNavigation = () => {
           isDrawer: true
         }}
         component={ContactListScreen}
+      />
+      <Drawer.Screen
+        name={Screens.OffersScreen}
+        initialParams={{
+          isDrawer: true
+        }}
+        component={OffersScreen}
+      />
+      <Drawer.Screen
+        name={Screens.PremiumPlanScreen}
+        initialParams={{
+          isDrawer: true
+        }}
+        component={PremiumPlanScreen}
       />
       <Drawer.Screen
         name={Screens.SettingScreen}

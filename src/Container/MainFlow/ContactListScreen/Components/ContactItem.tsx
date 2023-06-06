@@ -12,7 +12,7 @@ import {moderateScale, scale, verticalScale, widthPx} from '../../../../Theme/Re
 import Utility from '../../../../Theme/Utility'
 import TextToImage from './TextToImage'
 
-const ContactItem = ({item, isLoading = false, isSelectList = false, onPress}: any) => {
+const ContactItem = ({item, isLoading = false, isSelectList = false, onPress, offerItem}: any) => {
   const navigation: any = useNavigation()
 
   const onPressContact = useCallback(() => {
@@ -20,15 +20,32 @@ const ContactItem = ({item, isLoading = false, isSelectList = false, onPress}: a
       onPress()
     } else {
       Keyboard.dismiss()
+
+      if (offerItem) {
+        if (!item?.email) {
+          navigation.navigate(Screens.ContactDetailsScreen, {
+            data: item,
+            isOfferScreen: true,
+            offerItem
+          })
+        } else {
+          navigation.navigate(Screens.OfferDetailsScreen, {
+            contactItem: {...(offerItem || {}), email: item?.email},
+            isOfferScreen: true
+          })
+        }
+
+        return
+      }
       navigation.navigate(Screens.ContactDetailsScreen, {
         data: item
       })
     }
-  }, [item, navigation, onPress])
+  }, [item, navigation, offerItem, onPress])
 
   return (
     <ContactContainer onPress={onPressContact} isShared>
-      <TextToImage isLoading={isLoading} text={item?.value} />
+      <TextToImage fontSize={15} isLoading={isLoading} text={item?.value} />
       <View style={CommonStyles.flex}>
         {isLoading ? (
           <Skeleton>
@@ -75,8 +92,8 @@ export const ContactContainer = styled.TouchableOpacity`
   flex-direction: row;
   margin-top: 10px;
   margin-bottom: 10px;
-  margin-right: ${(props: any) => (props?.isShared ? verticalScale(10) : 0)}px;
-  margin-left: ${(props: any) => (props?.isShared ? verticalScale(10) : 0)}px;
+  margin-right: ${(props: any) => (props?.isShared ? verticalScale(20) : 0)}px;
+  margin-left: ${(props: any) => (props?.isShared ? verticalScale(20) : 0)}px;
 `
 
 export const ImageContainer = styled.Image`

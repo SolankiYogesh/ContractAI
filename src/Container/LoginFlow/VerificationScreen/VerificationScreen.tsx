@@ -44,10 +44,19 @@ const VerificationScreen = () => {
   }, [isPinReady])
 
   const onPressChangeEmail = useCallback(() => {
-    navigation.goBack()
-  }, [navigation])
+    if (isRegister) {
+      navigation.goBack()
+      navigation.goBack()
+    } else {
+      navigation.goBack()
+    }
+  }, [navigation, isRegister])
 
-  const onPressConfirm = useCallback(() => {
+  const onPressConfirm = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     if (otpCode.length < 4) {
       Utility.showAlert(English.R54)
       return
@@ -58,31 +67,38 @@ const VerificationScreen = () => {
       otp: otpCode
     }
     Loader.isLoading(true)
-    APICall('post', payload, EndPoints.verifyOTP).then((resp: any) => {
-      Loader.isLoading(false)
+    APICall('post', payload, EndPoints.verifyOTP)
+      .then((resp: any) => {
+        Loader.isLoading(false)
 
-      if (resp?.status === 200) {
-        if (isRegister) {
-          navigation.replace(Screens.LoginScreen)
+        if (resp?.status === 200) {
+          if (isRegister) {
+            navigation.replace(Screens.LoginScreen)
+          } else {
+            Constant.token = resp?.data?.data?.token
+            navigation.navigate(Screens.NewPasswordScreen, {
+              email,
+              data: resp?.data?.data
+            })
+          }
         } else {
-          Constant.token = resp?.data?.data?.token
-          navigation.navigate(Screens.NewPasswordScreen, {
-            email,
-            data: resp?.data?.data
-          })
+          Utility.showAlert(resp?.data?.message)
         }
-      } else {
-        Utility.showAlert(resp?.data?.message)
-      }
-    })
+      })
+      .catch(() => Loader.isLoading(false))
   }, [navigation, otpCode, isRegister, email])
 
-  const onPressResend = useCallback(() => {
+  const onPressResend = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const payload = {
       email
     }
     Loader.isLoading(true)
     APICall('post', payload, EndPoints.resendOTP).then((resp: any) => {
+      Constant.BROKERDATA = null
       Loader.isLoading(false)
       Utility.showAlert(resp?.data?.message)
       setOTPCode('')
@@ -101,27 +117,27 @@ const VerificationScreen = () => {
     <AppContainer>
       <ScrollContainer>
         <AppScrollView>
-          <BackButton />
+          <BackButton onPress={onPressChangeEmail} />
           <GettingText>{English.R36}</GettingText>
           <CreateAnAccountText>{English.R37}</CreateAnAccountText>
-          {!isRegister && (
-            <View style={CommonStyles.rowView}>
-              <TouchText
-                marginTop={0}
-                color={Colors.blackShade2A30}
-                marginBottom={0}
-                textAlign={'left'}
-                text={Utility.hideEmail(email)}
-              />
-              <TouchText
-                marginTop={0}
-                marginBottom={0}
-                textAlign={'left'}
-                text={English.R41}
-                onPress={onPressChangeEmail}
-              />
-            </View>
-          )}
+
+          <View style={CommonStyles.rowView}>
+            <TouchText
+              marginTop={0}
+              color={Colors.blackShade2A30}
+              marginBottom={0}
+              textAlign={'left'}
+              text={Utility.hideEmail(email)}
+            />
+
+            <TouchText
+              marginTop={0}
+              marginBottom={0}
+              textAlign={'left'}
+              text={English.R41}
+              onPress={onPressChangeEmail}
+            />
+          </View>
 
           <OTPInput
             setIsPinReady={setIsPinReady}

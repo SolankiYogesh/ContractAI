@@ -36,12 +36,11 @@ const AppNavigation = () => {
   }, [user])
 
   useEffect(() => {
-    const emit1 = emitter.addListener(Constant.eventListenerKeys.updateToken, (data: any) => {
-      setTimeout(() => {
-        Constant.token = data?.token
-        Constant.refresh = data?.refresh_token
-        disaptch(setToken(data))
-      }, 5000)
+    const emit1 = emitter.addListener(Constant.eventListenerKeys.updateToken, async (data: any) => {
+      await Utility.wait(3000)
+      Constant.token = data?.token
+      Constant.refresh = data?.refresh_token
+      disaptch(setToken(data))
     })
     Constant.token = user?.token
     Constant.refresh = user?.refresh_token

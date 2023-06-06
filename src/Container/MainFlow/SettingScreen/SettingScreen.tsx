@@ -1,15 +1,19 @@
 import React, {useCallback, useMemo} from 'react'
-import {Alert, View} from 'react-native'
+import {Alert, Image, Platform, View} from 'react-native'
 import DeviceInfo from 'react-native-device-info'
+import InAppReview from 'react-native-in-app-review'
 import Share from 'react-native-share'
 import {useDispatch, useSelector} from 'react-redux'
 import {CommonActions, useNavigation, useRoute} from '@react-navigation/native'
 import styled from 'styled-components/native'
 
+import APICall from '../../../APIRequest/APICall'
+import EndPoints from '../../../APIRequest/EndPoints'
 import {CreateAnAccountText, GettingText} from '../../../CommonStyle/AuthContainer'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import AppProfileIcon from '../../../Components/AppProfileIcon'
+import Loader from '../../../Components/Loader'
 import TouchText from '../../../Components/TouchText'
 import {logOut} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
@@ -44,54 +48,72 @@ const SettingScreen = () => {
     dispatch(logOut())
   }, [dispatch, navigation])
 
-  const onPressShare = () => {
-    const options = {
-      message: "Let's install this App REEVA"
+  const onPressShare = useCallback(async () => {
+    await Share.open({
+      message:
+        "Let's try Reeva app! It's a smart and easy app for real estate agents to create contracts in minutes. It's fast, simple and secure way to draft contracts that meet your needs and preferences. Get it at",
+      url:
+        Platform.OS === 'android'
+          ? 'https://play.google.com/store/apps/details?id=com.reeva'
+          : 'https://apps.apple.com/us/app/reeva/id1673635075',
+      title: 'Share with friend'
+    })
+  }, [])
+
+  const onPressReport = useCallback(() => {
+    navigation.navigate(Screens.FeedbackScreen)
+  }, [navigation])
+
+  const onPressLogOutButton = useCallback(() => {
+    Alert.alert(
+      'Reeva',
+      'Are you sure you want to log out ?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {text: 'OK', onPress: () => onPressLogOut()}
+      ],
+      {userInterfaceStyle: 'light'}
+    )
+  }, [onPressLogOut])
+
+  const onPressButton = useCallback(() => {
+    navigation.navigate(Screens.UserProfileScreen)
+  }, [navigation])
+
+  const onPressRating = useCallback(async () => {
+    const isAvailable = InAppReview.isAvailable()
+
+    if (isAvailable) {
+      await InAppReview.RequestInAppReview()
+    } else {
+      Utility.showAlert(English.R187)
     }
-    Share.open(options)
-  }
+  }, [])
 
-  const onPressButton = useCallback(
-    (id: number) => {
-      switch (id) {
-        case 1:
-          navigation.navigate(Screens.PremiumPlanScreen)
-          break
-        case 2:
-          Utility.showAlert('Coming Soon')
-          break
-        case 3:
-          onPressShare()
-          break
-        case 4:
-          navigation.navigate(Screens.FeedbackScreen)
-          break
-        case 5:
-          Utility.showAlert('Coming Soon')
-          break
+  const onPressButtonBrokerRage = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
+    const payload = {
+      request_brokerage: true
+    }
+    Loader.isLoading(true)
+    APICall('post', payload, EndPoints.requestBrokerage)
+      .then((resp: any) => {
+        Loader.isLoading(false)
 
-        case 6:
-          Alert.alert(
-            'Reeva',
-            'Are you sure you want to log out ?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel'
-              },
-              {text: 'OK', onPress: () => onPressLogOut()}
-            ],
-            {userInterfaceStyle: 'light'}
-          )
-
-          break
-        default:
-          navigation.navigate(Screens.UserProfileScreen)
-          break
-      }
-    },
-    [navigation, onPressLogOut]
-  )
+        if (resp?.status === 200) {
+          Utility.showAlert(English.R186)
+        } else {
+          Utility.showAlert(resp?.data?.message)
+        }
+      })
+      .catch(() => Loader.isLoading(false))
+  }, [])
 
   const renderProfileView = useMemo(() => {
     return (
@@ -105,7 +127,7 @@ const SettingScreen = () => {
           }
           <CreateAnAccountText marginBottom={1}>{user?.email}</CreateAnAccountText>
         </NameContainer>
-        <ImageContainer source={Images.right_arrow} />
+        <Image source={Images.right_arrow} />
       </ProfileContainer>
     )
   }, [onPressButton, user?.email, user?.first_name, user?.last_name, user?.profile_image])
@@ -115,31 +137,17 @@ const SettingScreen = () => {
       <AppHeader isMenu={isDrawer} isBack={!isDrawer} title={English.R123} />
       {renderProfileView}
       <View style={CommonStyles.flex}>
+        <SettingButton onPress={onPressRating} image={Images.start} title={English.R125} />
+
+        <SettingButton onPress={onPressShare} image={Images.share} title={English.R126} />
+        <SettingButton onPress={onPressReport} isArrow image={Images.about} title={English.R127} />
         <SettingButton
-          onPress={() => onPressButton(1)}
-          isArrow
-          image={Images.plan}
-          title={English.R124}
-        />
-        <SettingButton onPress={() => onPressButton(2)} image={Images.start} title={English.R125} />
-        <SettingButton onPress={() => onPressButton(3)} image={Images.share} title={English.R126} />
-        <SettingButton
-          onPress={() => onPressButton(4)}
-          isArrow
-          image={Images.about}
-          title={English.R127}
-        />
-        <SettingButton
-          onPress={() => onPressButton(5)}
+          onPress={onPressButtonBrokerRage}
           image={Images.brokerage}
           title={English.R128}
         />
       </View>
-      <SettingButton
-        onPress={() => onPressButton(6)}
-        image={Images.log_out2}
-        title={English.R129}
-      />
+      <SettingButton onPress={onPressLogOutButton} image={Images.log_out2} title={English.R129} />
       <TouchText
         marginTop={verticalScale(30)}
         marginBottom={verticalScale(30)}
@@ -164,11 +172,4 @@ const NameContainer = styled.View`
   margin-left: ${scale(10)}px;
   flex: 1;
   justify-content: center;
-`
-
-export const ImageContainer = styled.Image`
-  /* margin-left: ${scale(10)}px;
-  width: ${verticalScale(20)}px;
-  height: ${verticalScale(20)}px;
-  tint-color: ${(props: any) => props?.color || ''}; */
 `

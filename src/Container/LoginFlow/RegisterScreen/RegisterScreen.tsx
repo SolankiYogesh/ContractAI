@@ -15,7 +15,7 @@ import AppLogo from '../../../Components/AppLogo'
 import AppScrollView from '../../../Components/AppScrollView'
 import TouchText from '../../../Components/TouchText'
 import English from '../../../Resources/Locales/English'
-import {Colors, Screens} from '../../../Theme'
+import {Colors, Constant, Screens} from '../../../Theme'
 import {CommonStyles} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
@@ -24,6 +24,7 @@ const RegisterScreen = () => {
   const navigation: any = useNavigation()
   const route: any = useRoute().params
   const isGoogle = route?.isGoogle
+
   const emailRef = useRef<TextInput>(null)
   const passwordRef = useRef<TextInput>(null)
   const confirmPasswordRef = useRef<TextInput>(null)
@@ -35,8 +36,8 @@ const RegisterScreen = () => {
   const [address, setAddress] = useState('')
   const addressRef = useRef<TextInput>(null)
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [firstName, setFirstName] = useState(isGoogle?.familyName || '')
-  const [lastName, setLastName] = useState(isGoogle?.givenName || '')
+  const [firstName, setFirstName] = useState(isGoogle?.givenName || '')
+  const [lastName, setLastName] = useState(isGoogle?.familyName || '')
   const lastNameRef = useRef<TextInput>(null)
   const phoneNumberRef = useRef<TextInput>(null)
   const [isEnabled, setISEnabled] = useState(false)
@@ -45,6 +46,7 @@ const RegisterScreen = () => {
   const [errPassword, setErrPassword] = useState('')
   const [errPhoneNumber, setErrPhoneNumber] = useState('')
   const [errConfirmPassword, setErrConfirmPassword] = useState('')
+  const isApple = route?.isApple
 
   useEffect(() => {
     setISEnabled(
@@ -114,6 +116,7 @@ const RegisterScreen = () => {
 
   const onPressLogin = useCallback(() => {
     navigation.goBack()
+    Constant.BROKERDATA = null
   }, [navigation])
 
   const formateText = useCallback((text: string) => {
@@ -148,7 +151,8 @@ const RegisterScreen = () => {
         lastName,
         userLicence: licence,
         address,
-        isGoogle: !!isGoogle
+        isGoogle: !!isGoogle,
+        isApple: !!isApple
       }
 
       if (!isGoogle) {
@@ -161,14 +165,15 @@ const RegisterScreen = () => {
   }, [
     phoneNumber,
     email,
+    isGoogle,
     password,
     confirmPassword,
-    navigation,
     firstName,
     lastName,
     licence,
     address,
-    isGoogle
+    isApple,
+    navigation
   ])
 
   return (
@@ -289,26 +294,17 @@ const RegisterScreen = () => {
             onPress={onPressRegister}
             title={English.R80}
           />
-          {/* <CreateAnAccountText isCenter>{English.R20}</CreateAnAccountText> */}
-          {/* <AppButton
-            style={styles.googleFullContainer}
-            textStyle={styles.textStyle}
-            leftImage={Images.google}
-            title={English.R96}
-            isGradient={false}
-            onPress={onPressGoogleLogin}
-          /> */}
 
           <View style={CommonStyles.onlyRow}>
             <TouchText
-              marginTop={verticalScale(30)}
+              marginTop={verticalScale(10)}
               color={Colors.blackShade2A30}
               marginBottom={verticalScale(30)}
               textAlign={'center'}
               text={English.R13}
             />
             <TouchText
-              marginTop={verticalScale(30)}
+              marginTop={verticalScale(10)}
               marginBottom={verticalScale(30)}
               textAlign={'center'}
               text={English.R14}

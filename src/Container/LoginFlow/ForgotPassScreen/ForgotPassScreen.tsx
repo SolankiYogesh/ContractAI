@@ -35,7 +35,11 @@ const ForgotPassScreen = () => {
   useEffect(() => {
     setISEnabled(!!Utility.isEmpty(email))
   }, [email])
-  const onPressSendCode = useCallback(() => {
+  const onPressSendCode = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     setISEmailError(Utility.isValid(email))
     if (Utility.isValid(email)) {
       return
@@ -44,22 +48,23 @@ const ForgotPassScreen = () => {
       email
     }
     Loader.isLoading(true)
-    APICall('post', payload, EndPoints.forgotPass).then((resp: any) => {
-      Loader.isLoading(false)
-      Utility.showAlert(
-        resp?.data?.message?.Error?.length > 0
-          ? resp?.data?.message?.Error[0]
-          : resp?.data?.message && typeof resp?.data?.message === 'string'
-          ? resp?.data?.message
-          : English.R173
-      )
-      if (resp?.status === 200) {
-        navigation.navigate(Screens.VerificationScreen, {
-          email
-        })
-      }
-    })
-  }, [navigation, email])
+    APICall('post', payload, EndPoints.forgotPass)
+      .then(async (resp: any) => {
+        Loader.isLoading(false)
+
+        if (resp?.status === 200) {
+          navigation.navigate(Screens.VerificationScreen, {
+            email
+          })
+        } else if (resp?.status === 400) {
+          await Utility.wait()
+          setWrongEmailModal(true)
+        } else {
+          Utility.showAlert(resp?.data?.message || English.R173)
+        }
+      })
+      .catch(() => Loader.isLoading(false))
+  }, [navigation, email, setWrongEmailModal])
 
   const onPressLogin = useCallback(() => {
     navigation.navigate(Screens.LoginScreen)
@@ -108,9 +113,8 @@ const ForgotPassScreen = () => {
             />
           </View>
         </AppScrollView>
-      </ScrollContainer>
-      {wrongEmailModal && (
         <AppAlertModal
+          isVisible={wrongEmailModal}
           middleText={English.R46}
           topText={English.R87}
           btnText={English.R86}
@@ -118,7 +122,7 @@ const ForgotPassScreen = () => {
           onPress={() => navigation.navigate(Screens.LoginScreen)}
           onClose={() => setWrongEmailModal(false)}
         />
-      )}
+      </ScrollContainer>
     </AppContainer>
   )
 }

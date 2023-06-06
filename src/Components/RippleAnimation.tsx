@@ -1,9 +1,12 @@
-import React from 'react'
+import React, {memo, useMemo} from 'react'
+import {Image} from 'react-native'
+import {useSelector} from 'react-redux'
+import {CachedImage} from '@georstat/react-native-image-cache'
 import Lottie from 'lottie-react-native'
 import styled from 'styled-components/native'
 
 import {Images} from '../Theme'
-import {verticalScale} from '../Theme/Responsive'
+import {moderateScale, verticalScale} from '../Theme/Responsive'
 
 interface RippleAnimationProps {
   isAnimating?: boolean
@@ -11,20 +14,31 @@ interface RippleAnimationProps {
   isTop?: boolean
   color?: string
   size: number
+  isReeva?: boolean
 }
 
 const RippleAnimation = (props: RippleAnimationProps) => {
-  const {imageUrl, isAnimating = false, isTop = false, size} = props
+  const {isAnimating = false, isTop = false, size, isReeva = false} = props
+  const user = useSelector((state: any) => state?.user?.userData)
+  const ImageComponent = useMemo(() => (!isReeva ? CachedImage : Image), [isReeva])
+
+  const imageStyle: any = useMemo(() => {
+    return {
+      width: '80%',
+      height: '80%',
+      borderRadius: moderateScale(300),
+      zIndex: 1000
+    }
+  }, [])
 
   return (
     <Container size={size} isTop={isTop}>
-      <ImageContainer
-        source={{
-          uri: imageUrl
-        }}
+      <ImageComponent
+        style={imageStyle}
         resizeMode={'cover'}
+        borderRadius={moderateScale(300)}
+        source={isReeva ? Images.Reeva : user?.profile_image}
       />
-
       {isAnimating && (
         <Lottie
           // eslint-disable-next-line react-native/no-inline-styles
@@ -43,21 +57,14 @@ const RippleAnimation = (props: RippleAnimationProps) => {
     </Container>
   )
 }
-export default RippleAnimation
-
-const ImageContainer = styled.Image`
-  width: 80%;
-  height: 80%;
-  border-radius: 300px;
-  z-index: 1000;
-`
+export default memo(RippleAnimation)
 
 const Container = styled.View`
   width: ${(props: any) => props?.size || 80}px;
   height: ${(props: any) => props?.size || 80}px;
   align-items: center;
   justify-content: center;
-  margin-top: ${(p: any) => (p?.isTop ? verticalScale(50) : 0)}px;
   margin-bottom: ${(p: any) => (p?.isTop ? 0 : verticalScale(100))}px;
   align-self: center;
+  overflow: hidden;
 `

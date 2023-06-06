@@ -35,6 +35,7 @@ const AppHeader = (props: AppHeaderProps) => {
     headerTextStyle = {}
   } = props
   const navigation = useNavigation()
+  const isBig = title.split(' ').length > 2
 
   const onPressLeftRef = useCallback(() => {
     if (isMenu) {
@@ -55,7 +56,9 @@ const AppHeader = (props: AppHeaderProps) => {
         image={isMenu ? Images.menu : isBack ? Images.left_arrow : leftImage}
         onPress={onPressLeftRef}
       />
-      <TitleText style={headerTextStyle}>{title}</TitleText>
+      <TitleText isBig={isBig} style={headerTextStyle}>
+        {title}
+      </TitleText>
       {rightImage && <BackButton isHeader image={rightImage} onPress={onPressRight} />}
     </HeaderView>
   )
@@ -64,7 +67,7 @@ export default AppHeader
 const HeaderView = styled.View`
   flex-direction: row;
   align-items: center;
-  align-content: center;
+  justify-content: center;
   margin-right: 20px;
   margin-left: 20px;
   height: 50px;
@@ -73,12 +76,12 @@ const HeaderView = styled.View`
 `
 
 const TitleText = styled.Text`
-  font-size: ${moderateScale(18)}px;
+  font-size: ${moderateScale(16)}px;
   font-family: ${Fonts.ThemeBold};
   color: ${Colors.black};
-  flex: 1;
   text-align: center;
-  position: absolute;
-  width: 100%;
-  z-index: -1;
+  flex: 1;
+  position: ${(props: any) => (props?.isBig ? 'relative' : 'absolute')};
+  width: ${(props: any) => (props?.isBig ? 'auto' : '100%')};
+  z-index: ${(props: any) => (props?.isBig ? 1 : -1)};
 `

@@ -17,6 +17,7 @@ interface AppAlertModalProps {
   onPress?: () => void
   btnText?: string
   image?: ImageSourcePropType
+  isVisible?: boolean
 }
 const AppAlertModal = (props: AppAlertModalProps) => {
   const {
@@ -25,11 +26,12 @@ const AppAlertModal = (props: AppAlertModalProps) => {
     topText = '',
     middleText = '',
     btnText = '',
-    image
+    image,
+    isVisible = false
   } = props
 
   return (
-    <ReactNativeModal isVisible>
+    <ReactNativeModal isVisible={isVisible}>
       <Container>
         <BackButton
           onPress={onClose}
@@ -37,6 +39,8 @@ const AppAlertModal = (props: AppAlertModalProps) => {
           parentStyle={styles.closeImage}
           image={Images.close}
           isHeader
+          colors={[Colors.greyShadeFAF7, Colors.greyShadeEFF]}
+          style={styles.btnStyle}
         />
         {image && <ImageContainer source={image} resizeMode={'contain'} />}
         <InnerContainer>
@@ -49,6 +53,7 @@ const AppAlertModal = (props: AppAlertModalProps) => {
             onClose()
             onPress()
           }}
+          textStyle={styles.textStyle}
         />
       </Container>
     </ReactNativeModal>
@@ -66,8 +71,6 @@ const Container = styled.View`
 `
 
 const ImageContainer = styled.Image`
-  width: ${verticalScale(180)}px;
-  height: ${verticalScale(180)}px;
   margin-top: 10px;
   margin-bottom: 10px;
 `
@@ -87,12 +90,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: scale(10),
     top: verticalScale(10),
-    backgroundColor: Colors.greyShadeEFF,
     borderRadius: moderateScale(15)
   },
   imageStyle: {
-    width: '45%',
-    height: '45%',
+    width: '35%',
+    height: '35%',
     tintColor: Colors.greyShade595
+  },
+  textStyle: {
+    fontSize: moderateScale(16),
+    fontFamily: Fonts.ThemeMedium
+  },
+  btnStyle: {
+    height: verticalScale(40),
+    width: verticalScale(40),
+    borderRadius: moderateScale(10)
   }
 })

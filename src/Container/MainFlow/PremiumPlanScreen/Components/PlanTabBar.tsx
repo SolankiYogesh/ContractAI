@@ -38,7 +38,7 @@ export const PlanTitle = styled.Text`
   margin-bottom: ${(props: any) => (props?.isSpace ? verticalScale(30) : 0)}px;
   margin-top: ${(props: any) => (props?.isSpace ? verticalScale(30) : 0)}px;
 `
-export const PlanList = styled.FlatList``
+
 export const TinyText = styled.Text`
   font-family: ${Fonts.ThemeBold};
   color: ${Colors.blackShade2A30};
@@ -49,11 +49,6 @@ export const InnetTextContainer = styled.View`
   align-self: center;
   margin-bottom: ${verticalScale(30)}px;
   margin-top: ${verticalScale(30)}px;
-`
-export const SheetInnetText = styled.Text`
-  font-family: ${Fonts.ThemeMedium};
-  color: ${Colors.blackShade2A30};
-  font-size: ${moderateScale(15)}px;
 `
 
 const labelStyle = {

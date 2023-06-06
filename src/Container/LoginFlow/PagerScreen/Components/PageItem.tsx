@@ -4,7 +4,7 @@ import styled from 'styled-components/native'
 
 import {Colors} from '../../../../Theme'
 import {Fonts} from '../../../../Theme/Fonts'
-import {heightPx, moderateScale, scale, verticalScale, widthPx} from '../../../../Theme/Responsive'
+import {moderateScale, verticalScale, widthPx} from '../../../../Theme/Responsive'
 
 const PageItem = ({item}: any) => {
   return (
@@ -30,17 +30,13 @@ export default PageItem
 
 const Container = styled.View`
   width: ${widthPx(100)}px;
-  /* background-color: aliceblue; */
   align-self: center;
   align-content: center;
-  /* height: ${heightPx(70)}px; */
-  /* padding-left: ${scale(20)}px; */
-  /* padding-right: ${scale(20)}px; */
+  height: 100%;
+  margin-top: ${verticalScale(50)}px;
 `
 
 const ImageContainer = styled.Image`
-  /* align-content: flex-end; */
-  /* align-items: flex-end; */
   align-self: flex-end;
 `
 

@@ -1,7 +1,9 @@
-import React, {forwardRef, useEffect, useState} from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {forwardRef, useCallback, useEffect, useRef, useState} from 'react'
 import {
   Image,
   ImageSourcePropType,
+  Pressable,
   StyleProp,
   StyleSheet,
   TextInput,
@@ -12,6 +14,13 @@ import {
   ViewStyle
 } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated'
 import styled from 'styled-components/native'
 
 import {Images} from '../Theme'
@@ -34,10 +43,11 @@ interface AppInputProps extends TextInputProps {
   isEye?: boolean
   isGradient?: boolean
   error?: string
-  parentStyle?: StyleProp<TextStyle>
+  errorStyle?: StyleProp<TextStyle>
+  isAnimated?: boolean
 }
 
-const AppInput = forwardRef((props: AppInputProps, ref: any) => {
+const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref) => {
   const {
     placeholder = '',
     isMultiline = false,
@@ -51,10 +61,14 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
     isEye = false,
     isGradient = false,
     error = '',
-    parentStyle = {}
+    errorStyle = {},
+    isAnimated = false
   } = props
+  const AnimatedTouchableOpacity = Animated.createAnimatedComponent(Pressable)
   const [isPassword, setIsPassword] = useState(false)
   const [isFocus, setISFocus] = useState(false)
+  const translateY = useSharedValue(0)
+  const textInputRef = useRef<TextInput>(null)
 
   useEffect(() => {
     if (props.isPassword) {
@@ -62,8 +76,63 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
     }
   }, [props.isPassword])
 
+  useEffect(() => {
+    if (isAnimated) {
+      if (value || isFocus) {
+        translateY.value = withTiming(-INPUT_HEIGHT / 2)
+      } else {
+        translateY.value = withTiming(0)
+      }
+    }
+  }, [value, isFocus, isAnimated])
+
+  const animatedPlaceHolderStyle = useAnimatedStyle(() => {
+    return {
+      color: interpolateColor(
+        translateY.value,
+        [0, -INPUT_HEIGHT / 2],
+        [Colors.PlaceHolderColor, isFocus ? Colors.ThemeColor : Colors.PlaceHolderColor]
+      ),
+      fontSize: interpolate(translateY.value, [0, -INPUT_HEIGHT / 2], [15, 11])
+    }
+  }, [])
+
+  const animatedTouchableOpacityStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: translateY.value
+        }
+      ]
+    }
+  }, [])
+
+  const setRefs = useCallback(
+    (node: TextInput | null) => {
+      if (ref) {
+        ref.current = node
+      }
+      textInputRef.current = node
+    },
+    [ref]
+  )
+
   return (
-    <TouchableOpacity style={parentStyle} disabled={!onPress} onPress={onPress}>
+    <TouchableOpacity style={styles.parentStyle} disabled={!onPress} onPress={onPress}>
+      {isAnimated && (
+        <AnimatedTouchableOpacity
+          onPress={() => {
+            if (textInputRef.current) {
+              textInputRef.current?.focus()
+            }
+          }}
+          style={[styles.animateButton, animatedTouchableOpacityStyle]}
+        >
+          <Animated.Text style={[styles.placeHolderStyle, animatedPlaceHolderStyle]}>
+            {placeholder}
+          </Animated.Text>
+        </AnimatedTouchableOpacity>
+      )}
       <LinearGradient
         colors={
           isGradient
@@ -83,19 +152,19 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
         <TextInput
           onChangeText={onChangeText}
           value={value}
-          ref={ref}
+          ref={setRefs}
           onFocus={() => setISFocus(true)}
           onBlur={() => setISFocus(false)}
           editable={editable}
           isMultiline
           multiline={isMultiline}
           placeholderTextColor={Colors.PlaceHolderColor}
-          placeholder={placeholder}
           selectionColor={Colors.ThemeColor}
           style={[styles.input, inputStyle, isMultiline && styles.multiStyle]}
-          {...props}
+          {...{...props, placeholder: isAnimated ? '' : placeholder}}
           secureTextEntry={isPassword}
         />
+
         {rightImage && (
           <View style={styles.imageCointainer}>
             <Image style={styles.imageStyle} source={rightImage} />
@@ -111,7 +180,7 @@ const AppInput = forwardRef((props: AppInputProps, ref: any) => {
           </EyeContainer>
         )}
       </LinearGradient>
-      {!!error && <ErrorText errorText={error} />}
+      {!!error && <ErrorText style={errorStyle} errorText={error} />}
     </TouchableOpacity>
   )
 })
@@ -124,11 +193,14 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: Colors.greyShadeE8,
-    marginVertical: verticalScale(10),
     borderRadius: moderateScale(10),
     flexDirection: 'row',
     alignItems: 'center',
     padding: scale(10)
+  },
+  parentStyle: {
+    marginVertical: verticalScale(10),
+    justifyContent: 'center'
   },
   activeContainer: {
     borderColor: Colors.ThemeColor,
@@ -149,12 +221,26 @@ const styles = StyleSheet.create({
     color: Colors.blackShade2A30,
     fontFamily: Fonts.ThemeRegular,
     flex: 1,
-    height: INPUT_HEIGHT
+    height: INPUT_HEIGHT,
+    zIndex: 20000
   },
   multiStyle: {
     height: heightPx(40),
     textAlignVertical: 'top',
-    paddingTop: 15
+    paddingTop: verticalScale(15)
+  },
+  placeHolderStyle: {
+    color: Colors.PlaceHolderColor,
+    fontSize: moderateScale(15),
+    fontFamily: Fonts.ThemeRegular,
+    overflow: 'hidden'
+  },
+  animateButton: {
+    position: 'absolute',
+    zIndex: 1,
+    backgroundColor: Colors.greyShadeF7F,
+    padding: scale(2),
+    marginLeft: scale(10)
   }
 })
 

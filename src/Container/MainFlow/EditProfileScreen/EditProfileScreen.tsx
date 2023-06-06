@@ -1,9 +1,10 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {StyleSheet, TextInput, View} from 'react-native'
+import {Alert, StyleSheet, TextInput, View} from 'react-native'
 import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker'
 import {openSettings} from 'react-native-permissions'
 import {useDispatch, useSelector} from 'react-redux'
 import {useNavigation} from '@react-navigation/native'
+import _ from 'lodash'
 import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
@@ -24,7 +25,6 @@ import {Fonts} from '../../../Theme/Fonts'
 import Permission from '../../../Theme/Permission'
 import {moderateScale, verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
-import {LabeledText} from '../UserProfileScreen/UserProfileScreen'
 
 const EditProfileScreen = () => {
   const navigation = useNavigation()
@@ -44,6 +44,7 @@ const EditProfileScreen = () => {
   const [address, setAddress] = useState(userData?.address || '')
   const [sName, setSName] = useState(userData?.broker?.supervisor_name || '')
   const dispatch = useDispatch()
+  const [isEdited, setISEdited] = useState(false)
 
   useEffect(() => {
     setPhoneNumber(userData?.phone_number)
@@ -98,6 +99,32 @@ const EditProfileScreen = () => {
         Utility.isEmpty(sName)
       )
     )
+
+    const cloneData = Utility.deepClone(userData)
+    delete cloneData.id
+    delete cloneData.refresh
+    delete cloneData.refresh_token
+    delete cloneData.token
+
+    const editedData = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone_number: phoneNumber,
+      address,
+      license_no: userLicence,
+      profile_image: profileUri,
+      broker: {
+        broker_name: brokerName,
+        broker_address: brokerAddress,
+        broker_license_no: licence,
+        supervisor_name: sName,
+        supervisor_license_no: sLNumber,
+        title_company: PTC,
+        title_company_address: PTCA
+      }
+    }
+    setISEdited(!_.isEqual(cloneData, editedData))
   }, [
     PTC,
     PTCA,
@@ -112,7 +139,8 @@ const EditProfileScreen = () => {
     profileUri,
     userLicence,
     sLNumber,
-    sName
+    sName,
+    userData
   ])
 
   const onChangePhoneNumber = useCallback(
@@ -143,6 +171,21 @@ const EditProfileScreen = () => {
     [submitPressed, email]
   )
 
+  const onPermissionReject = useCallback(() => {
+    Alert.alert(
+      'Reeva',
+      'Please allow permission to access gallery',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {text: 'Change Permission', onPress: () => openSettings()}
+      ],
+      {userInterfaceStyle: 'light'}
+    )
+  }, [])
+
   const onPressImagePicker = useCallback(async () => {
     const isStorage = await Permission.getStoragePermission()
 
@@ -154,15 +197,21 @@ const EditProfileScreen = () => {
         .then((image) => {
           setProfileUri(image)
         })
-        .catch(({message}: any) => {
-          Utility.showAlert(message)
+        .catch(({code}: any) => {
+          if (code === 'E_NO_LIBRARY_PERMISSION') {
+            onPermissionReject()
+          }
         })
     } else {
-      openSettings()
+      onPermissionReject()
     }
-  }, [])
+  }, [onPermissionReject])
 
   const onPressSave = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     let isValid = true
     setSubmitPressed(true)
     if (phoneNumber.length < 14) {
@@ -178,11 +227,15 @@ const EditProfileScreen = () => {
         profile_image: {},
         data: {}
       }
-      if (profileUri?.data) {
+
+      if (profileUri?.path) {
         payload.profile_image = {
-          uri: `data:image/jpeg;base64,${profileUri?.data}`,
+          uri: profileUri?.path,
           type: profileUri.mime,
-          name: profileUri.filename
+          name:
+            profileUri.filename ||
+            profileUri?.path?.substring(profileUri?.path?.lastIndexOf('/') + 1) ||
+            ''
         }
       }
 
@@ -205,16 +258,22 @@ const EditProfileScreen = () => {
       })
 
       Loader.isLoading(true)
-      APICall('put', payload, EndPoints.editProfile, {}, true).then((resp: any) => {
-        Loader.isLoading(false)
-        Utility.showAlert(resp?.data?.message)
-        if (resp?.status === 200) {
-          if (resp?.data?.data) {
-            dispatch(setUserData(resp?.data?.data))
+      APICall('put', payload, EndPoints.editProfile, {}, true)
+        .then((resp: any) => {
+          Loader.isLoading(false)
+
+          if (resp?.status === 200) {
+            if (resp?.data?.data) {
+              dispatch(setUserData(resp?.data?.data))
+            }
+            navigation.goBack()
+          } else {
+            Utility.showAlert(resp?.data?.message)
           }
-          navigation.goBack()
-        }
-      })
+        })
+        .catch(() => {
+          Loader.isLoading(false)
+        })
     }
   }, [
     phoneNumber,
@@ -247,13 +306,14 @@ const EditProfileScreen = () => {
               size={verticalScale(120)}
             />
             <CameraContainer onPress={onPressImagePicker}>
-              <CameraIcon source={Images.pencil} />
+              <CameraIcon tintColor={Colors.ThemeColor} source={Images.pencil} />
             </CameraContainer>
           </ProfileContainer>
           <LabeledText color={Colors.greyShadeUnk}>{English.R149}</LabeledText>
           <View style={CommonStyles.row}>
             <AppInput
               value={firstName}
+              isAnimated
               onChangeText={setFirstName}
               returnKeyType={'next'}
               inputStyle={inputStyleStyle.inputStyle}
@@ -265,6 +325,7 @@ const EditProfileScreen = () => {
               value={lastName}
               onChangeText={setlastName}
               returnKeyType={'next'}
+              isAnimated
               ContainerStyle={styles.fixedWidth}
               ref={lastNameRef}
               inputStyle={inputStyleStyle.inputStyle}
@@ -279,6 +340,7 @@ const EditProfileScreen = () => {
             ref={phoneNumberRef}
             inputStyle={inputStyleStyle.inputStyle}
             maxLength={14}
+            isAnimated
             error={errPhoneNumber}
             keyboardType={'number-pad'}
             ContainerStyle={styles.inputStyle}
@@ -290,6 +352,8 @@ const EditProfileScreen = () => {
             returnKeyType={'next'}
             inputStyle={inputStyleStyle.inputStyle}
             value={email}
+            isAnimated
+            editable={false}
             error={errEmail}
             autoCapitalize={'none'}
             autoCorrect={false}
@@ -305,6 +369,7 @@ const EditProfileScreen = () => {
             value={userLicence}
             inputStyle={inputStyleStyle.inputStyle}
             ref={userLicenceRef}
+            isAnimated
             onChangeText={setUserLicence}
             ContainerStyle={styles.inputStyle}
             placeholder={English.R138}
@@ -313,6 +378,7 @@ const EditProfileScreen = () => {
           <AppInput
             returnKeyType={'next'}
             value={address}
+            isAnimated
             ref={addressRef}
             inputStyle={inputStyleStyle.inputStyle}
             onChangeText={setAddress}
@@ -326,6 +392,7 @@ const EditProfileScreen = () => {
             returnKeyType={'next'}
             inputStyle={inputStyleStyle.inputStyle}
             value={brokerName}
+            isAnimated
             ref={brokerNameRef}
             onChangeText={setBrokername}
             ContainerStyle={styles.inputStyle}
@@ -337,6 +404,7 @@ const EditProfileScreen = () => {
             value={brokerAddress}
             inputStyle={inputStyleStyle.inputStyle}
             ref={brokerAddressRef}
+            isAnimated
             onChangeText={setbrokerAddress}
             ContainerStyle={styles.inputStyle}
             placeholder={English.R137}
@@ -344,6 +412,7 @@ const EditProfileScreen = () => {
           />
           <AppInput
             returnKeyType={'next'}
+            isAnimated
             value={licence}
             inputStyle={inputStyleStyle.inputStyle}
             ref={licenceNuRef}
@@ -357,6 +426,7 @@ const EditProfileScreen = () => {
             value={sName}
             onChangeText={(text) => setSName(text.replace(/[^a-z]/gi, ''))}
             ref={sNameRef}
+            isAnimated
             inputStyle={inputStyleStyle.inputStyle}
             returnKeyType={'next'}
             ContainerStyle={styles.inputStyle}
@@ -365,6 +435,7 @@ const EditProfileScreen = () => {
           />
           <AppInput
             value={sLNumber}
+            isAnimated
             onChangeText={(text) => setSLNumber(text.replace(/[^a-z]/gi, ''))}
             ref={sNumberRef}
             inputStyle={inputStyleStyle.inputStyle}
@@ -377,6 +448,7 @@ const EditProfileScreen = () => {
             value={PTC}
             onChangeText={setPTC}
             ref={ptcRef}
+            isAnimated
             inputStyle={inputStyleStyle.inputStyle}
             returnKeyType={'next'}
             ContainerStyle={styles.inputStyle}
@@ -385,6 +457,7 @@ const EditProfileScreen = () => {
           />
           <AppInput
             value={PTCA}
+            isAnimated
             inputStyle={inputStyleStyle.inputStyle}
             onChangeText={setPTCA}
             ref={ptcaRef}
@@ -395,7 +468,7 @@ const EditProfileScreen = () => {
           />
         </AppScrollView>
         <AppButton
-          disabled={!isEnabled}
+          disabled={!isEnabled || !isEdited}
           style={styles.width}
           onPress={onPressSave}
           title={English.R66}
@@ -412,8 +485,6 @@ const ProfileContainer = styled.View`
   margin-bottom: ${verticalScale(20)}px;
 `
 const CameraIcon = styled.Image`
-  width: 60%;
-  height: 60%;
   tint-color: ${Colors.ThemeColor};
 `
 const CameraContainer = styled.TouchableOpacity`
@@ -433,3 +504,13 @@ const inputStyleStyle = StyleSheet.create({
     fontFamily: Fonts.ThemeSemiBold
   }
 })
+export const LabeledText = styled.Text`
+  font-family: ${Fonts.ThemeMedium};
+  font-size: ${moderateScale(16)}px;
+  color: ${(props: any) => props?.color || Colors.blackShade2A30};
+  text-align: left;
+  margin-top: ${verticalScale(15)}px;
+`
+export const TexpView = styled.View`
+  background-color: ${(props: any) => props?.BGColor || 'red'};
+`

@@ -39,7 +39,11 @@ const NewPasswordScreen = () => {
     setISEnabled(!!(Utility.isEmpty(confirmPassword) && Utility.isEmpty(password)))
   }, [confirmPassword, password])
 
-  const onPressChangePassword = useCallback(() => {
+  const onPressChangePassword = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const isMatching = password === confirmPassword
     setISPasswordError(!isMatching)
     if (!isMatching) {
@@ -53,17 +57,18 @@ const NewPasswordScreen = () => {
       Authorization: 'Bearer ' + tokenData?.token
     }
     Loader.isLoading(true)
-    APICall('post', payload, EndPoints.resetpassword, header).then((resp: any) => {
-      Loader.isLoading(false)
+    APICall('post', payload, EndPoints.resetpassword, header)
+      .then(async (resp: any) => {
+        Loader.isLoading(false)
 
-      if (resp?.status === 200) {
-        setTimeout(() => {
+        if (resp?.status === 200) {
+          await Utility.wait()
           setISModal(true)
-        }, 1000)
-      } else {
-        Utility.showAlert(resp?.data?.message)
-      }
-    })
+        } else {
+          Utility.showAlert(resp?.data?.message)
+        }
+      })
+      .catch(() => Loader.isLoading(false))
   }, [password, confirmPassword, email, tokenData])
 
   const renderChangePasswordView = useMemo(() => {
@@ -130,16 +135,15 @@ const NewPasswordScreen = () => {
         </AppScrollView>
       </ScrollContainer>
 
-      {isModal && (
-        <AppAlertModal
-          middleText={English.R68}
-          topText={English.R67}
-          btnText={English.R86}
-          onPress={() => navigation.navigate(Screens.LoginScreen)}
-          image={Images.passwordReset}
-          onClose={() => navigation.navigate(Screens.LoginScreen)}
-        />
-      )}
+      <AppAlertModal
+        isVisible={isModal}
+        middleText={English.R68}
+        topText={English.R67}
+        btnText={English.R14}
+        onPress={() => navigation.navigate(Screens.LoginScreen)}
+        image={Images.passwordReset}
+        onClose={() => navigation.navigate(Screens.LoginScreen)}
+      />
     </AppContainer>
   )
 }

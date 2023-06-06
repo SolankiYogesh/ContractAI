@@ -20,8 +20,8 @@ const AppScrollView = (props: AppScrollViewProps) => {
       contentContainerStyle={contentContainerStyle}
       style={style}
       bounces={false}
-      extraHeight={20}
-      extraScrollHeight={Platform.OS === 'ios' ? 0 : 10}
+      extraHeight={45}
+      extraScrollHeight={Platform.OS === 'ios' ? 70 : 10}
       stickyHeaderIndices={stickyHeaderIndices}
       {...props}
     >

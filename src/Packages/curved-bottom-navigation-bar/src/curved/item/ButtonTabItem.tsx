@@ -23,7 +23,8 @@ const ButtonTabItemComponent = (props: TabBarItemProps) => {
     width,
     icon,
     onPress = () => {},
-    focused
+    focused,
+    isTouchable
   } = props
   // reanimated
   const {bottom} = useSafeAreaInsets()
@@ -34,9 +35,13 @@ const ButtonTabItemComponent = (props: TabBarItemProps) => {
   const translateY = useInterpolate(progress, [0, 0.4], [0, 10])
 
   const _onPress = useCallback(() => {
+    if (!isTouchable && index === 0) {
+      onPress(3)
+      return
+    }
     onPress(index)
     selectedIndex.value = index
-  }, [index, selectedIndex])
+  }, [index, selectedIndex, isTouchable])
 
   // effect
   useAnimatedReaction(

@@ -67,6 +67,8 @@ interface AnimatedTabBarProps {
   onPress?: (index: number) => void
 
   children?: React.ReactNode
+
+  isTouchable?: boolean
 }
 const AnimatedTabBarComponent = (props: AnimatedTabBarProps) => {
   // props
@@ -80,7 +82,8 @@ const AnimatedTabBarComponent = (props: AnimatedTabBarProps) => {
     onPress = () => {},
     barWidth,
     navigationIndex = 0,
-    children
+    children,
+    isTouchable = false
   } = props
 
   const selectedIndex = useSharedValue(0)
@@ -107,6 +110,7 @@ const AnimatedTabBarComponent = (props: AnimatedTabBarProps) => {
       selectedIndex={selectedIndex}
       navigationIndex={navigationIndex}
       routes={tabs}
+      isTouchable={isTouchable}
       children={children}
       onPress={onPress}
       duration={duration}

@@ -34,7 +34,7 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
-	<string></string>
+	<string/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -47,7 +47,7 @@
 	<key>NSContactsUsageDescription</key>
 	<string>$(PRODUCT_NAME) would like to access your contacts</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>REEVA needs access to your Microphone.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

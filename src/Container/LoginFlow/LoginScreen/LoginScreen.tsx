@@ -1,7 +1,9 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {Keyboard, TextInput, View} from 'react-native'
+import {Keyboard, Platform, TextInput, View} from 'react-native'
 import {useDispatch} from 'react-redux'
+import {appleAuth} from '@invertase/react-native-apple-authentication'
 import {CommonActions, useNavigation} from '@react-navigation/native'
+import jwt_decode from 'jwt-decode'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
@@ -11,6 +13,7 @@ import {
   ScrollContainer,
   styles
 } from '../../../CommonStyle/AuthContainer'
+import AppAlertModal from '../../../Components/AppAlertModal'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppInput from '../../../Components/AppInput'
@@ -29,12 +32,13 @@ const LoginScreen = () => {
   const navigation: any = useNavigation()
   const passwordRef = useRef<TextInput>(null)
   const [email, setEmail] = useState(__DEV__ ? 'yoga@yopmail.com' : '')
-  const [password, setPassword] = useState(__DEV__ ? 'yogesh@12345' : '')
+  const [password, setPassword] = useState(__DEV__ ? '12345678' : '')
   const [isEnabled, setISEnabled] = useState(false)
   const [submitPressed, setSubmitPressed] = useState(false)
   const [errEmail, setErrEmail] = useState('')
   const [errPassword, setErrPassword] = useState('')
   const dispatch = useDispatch()
+  const [isModal, setISModal] = useState(false)
 
   useEffect(() => {
     setISEnabled(!!(Utility.isEmpty(email) && Utility.isEmpty(password)))
@@ -66,9 +70,10 @@ const LoginScreen = () => {
   }, [navigation])
 
   const onPressRegister = useCallback(
-    (isGoogle = false) => {
+    (isGoogle: any = false, isApple = false) => {
       navigation.navigate(Screens.RegisterScreen, {
-        isGoogle: isGoogle || null
+        isGoogle: isGoogle || null,
+        isApple
       })
     },
     [navigation]
@@ -80,7 +85,7 @@ const LoginScreen = () => {
       Constant.refresh = resp?.data?.refresh_token
       const cloneData = Utility.deepClone(resp?.data?.data)
       cloneData.token = resp?.data?.token
-      cloneData.refresh = resp?.data?.refresh_token
+      cloneData.refresh_token = resp?.data?.refresh_token
 
       dispatch(setUserData(cloneData))
 
@@ -102,33 +107,85 @@ const LoginScreen = () => {
   )
 
   const onPressGoogleLogin = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const googleUser: any = await Utility.googleLogin()
+
     if (googleUser) {
       const payload = {
         google_access_token: googleUser?.token?.accessToken,
-        email: googleUser?.user?.email
+        email: googleUser?.user?.email,
+        profile_image: googleUser?.user?.photo
       }
 
       Loader.isLoading(true)
       APICall('post', payload, EndPoints.googleLogin)
-        .then((resp: any) => {
+        .then(async (resp: any) => {
           Loader.isLoading(false)
           if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
             onLoginSetup(resp)
           } else if (resp?.status === 201 && resp?.data?.is_new_user) {
             onPressRegister(googleUser?.user)
+          } else if (resp?.status === 404) {
+            await Utility.wait()
+            setISModal(true)
           } else {
-            setTimeout(() => {
-              Utility.showAlert(resp?.data?.message)
-            }, 1000)
+            await Utility.wait()
+            Utility.showAlert(resp?.data?.message)
           }
         })
-        .catch(() => Loader.isLoading(false))
+        .catch((e) => {
+          Loader.isLoading(false)
+        })
     }
+  }, [onLoginSetup, onPressRegister])
+
+  const onPressAppleLogin = useCallback(async () => {
+    try {
+      const isInternet = await Utility.isInternet()
+      if (!isInternet) {
+        return
+      }
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME]
+      })
+      const {email}: any = jwt_decode(appleAuthRequestResponse.identityToken || '')
+      if (appleAuthRequestResponse?.identityToken) {
+        const payload = {
+          apple_access_token: appleAuthRequestResponse.identityToken,
+          email
+        }
+
+        Loader.isLoading(true)
+        APICall('post', payload, EndPoints.appleLogin)
+          .then(async (resp: any) => {
+            Loader.isLoading(false)
+            if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
+              onLoginSetup(resp)
+            } else if (resp?.status === 201 && resp?.data?.is_new_user) {
+              onPressRegister({email}, true)
+            } else if (resp?.status === 404) {
+              setISModal(true)
+            } else {
+              await Utility.wait()
+
+              Utility.showAlert(resp?.data?.message)
+            }
+          })
+          .catch(() => Loader.isLoading(false))
+      }
+    } catch (error) {}
   }, [onLoginSetup, onPressRegister])
 
   const onPressLogin = useCallback(async () => {
     Keyboard.dismiss()
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     let isValid = true
     setSubmitPressed(true)
     if (Utility.isValid(email)) {
@@ -147,34 +204,45 @@ const LoginScreen = () => {
         password
       }
 
-      APICall('post', payload, EndPoints.login).then((resp: any) => {
-        Loader.isLoading(false)
+      APICall('post', payload, EndPoints.login)
+        .then(async (resp: any) => {
+          Loader.isLoading(false)
 
-        if (resp?.status === 200 && resp?.data?.data) {
-          onLoginSetup(resp)
-        } else if (resp?.status === 202) {
-          navigation.navigate(Screens.VerificationScreen, {
-            isRegister: true,
-            email
-          })
-        } else {
-          setTimeout(() => {
+          if (resp?.status === 200 && resp?.data?.data) {
+            onLoginSetup(resp)
+          } else if (resp?.status === 202) {
+            navigation.navigate(Screens.VerificationScreen, {
+              isRegister: true,
+              email
+            })
+          } else if (resp?.status === 404) {
+            await Utility.wait()
+
+            setISModal(true)
+          } else {
+            await Utility.wait()
+
             Utility.showAlert(resp?.data?.message)
-          }, 1000)
-        }
-      })
+          }
+        })
+        .catch(() => Loader.isLoading(false))
     }
   }, [email, navigation, onLoginSetup, password])
+
+  const forgotPassStyle: any = {
+    alignSelf: 'flex-end'
+  }
 
   return (
     <AppContainer>
       <ScrollContainer>
         <AppScrollView>
           <AppLogo />
+
           <GettingText isTopMargin top={20}>
             {English.R15}
           </GettingText>
-          <CreateAnAccountText>{English.R16}</CreateAnAccountText>
+          <CreateAnAccountText marginBottom={20}>{English.R16}</CreateAnAccountText>
           <AppInput
             onSubmitEditing={() => passwordRef.current?.focus()}
             ContainerStyle={styles.inputStyle}
@@ -204,10 +272,10 @@ const LoginScreen = () => {
             error={errPassword}
           />
           <TouchText
-            textAlign={'right'}
             marginTop={verticalScale(20)}
             marginBottom={verticalScale(20)}
             text={English.R31}
+            style={forgotPassStyle}
             onPress={onPressForgotPassword}
           />
           <AppButton
@@ -216,9 +284,6 @@ const LoginScreen = () => {
             onPress={onPressLogin}
             title={English.R19}
           />
-
-          {/* <CreateAnAccountText isCenter>{English.R20}</CreateAnAccountText> */}
-
           <AppButton
             style={styles.googleFullContainer}
             textStyle={styles.textStyle}
@@ -227,6 +292,17 @@ const LoginScreen = () => {
             isGradient={false}
             onPress={onPressGoogleLogin}
           />
+
+          {Platform.OS === 'ios' && Number(Platform.Version) > 13 && (
+            <AppButton
+              style={styles.googleFullContainer}
+              textStyle={styles.textStyle}
+              leftImage={Images.apple}
+              title={English.R12}
+              isGradient={false}
+              onPress={onPressAppleLogin}
+            />
+          )}
 
           <View style={CommonStyles.onlyRow}>
             <TouchText
@@ -246,6 +322,15 @@ const LoginScreen = () => {
           </View>
         </AppScrollView>
       </ScrollContainer>
+      <AppAlertModal
+        isVisible={isModal}
+        middleText={English.R46}
+        topText={English.R87}
+        btnText={English.R86}
+        image={Images.image404}
+        onPress={() => {}}
+        onClose={() => setISModal(false)}
+      />
     </AppContainer>
   )
 }

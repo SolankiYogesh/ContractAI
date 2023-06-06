@@ -1,7 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {ActivityIndicator, StyleSheet, TouchableOpacity, View} from 'react-native'
+import {Alert, StyleSheet, TouchableOpacity, View} from 'react-native'
 import Contacts from 'react-native-contacts'
+import {openSettings} from 'react-native-permissions'
 import BottomSheet, {BottomSheetBackdrop, BottomSheetSectionList} from '@gorhom/bottom-sheet'
 import _ from 'lodash'
 import {v4 as uuid} from 'uuid'
@@ -9,13 +10,13 @@ import {v4 as uuid} from 'uuid'
 import APICall from '../../../../APIRequest/APICall'
 import EndPoints from '../../../../APIRequest/EndPoints'
 import AppInput from '../../../../Components/AppInput'
-import EmptyComponent from '../../../../Components/EmptyComponent'
+import CustomSectionList from '../../../../Components/CustomSectionList'
+import LoadingView from '../../../../Components/LoadingView'
 import {ForgotPasswordText} from '../../../../Components/TouchText'
 import English from '../../../../Resources/Locales/English'
 import {Colors, Images} from '../../../../Theme'
-import {CommonStyles} from '../../../../Theme/CommonStyles'
 import Permission from '../../../../Theme/Permission'
-import {heightPx, moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
+import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
 import Utility from '../../../../Theme/Utility'
 import {TitleText} from '../ContactListScreen'
 import ContactItem from './ContactItem'
@@ -23,43 +24,48 @@ import ContactItem from './ContactItem'
 interface ContactSelectListSheetProps {
   onClose?: () => void
   usersData?: any[]
-  onUserUpdate?: (users: any[]) => void
 }
 
 const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
-  const {onClose, usersData = [], onUserUpdate = () => {}} = props
-  const snapPoints = useMemo(() => [heightPx(100)], [])
+  const {onClose, usersData = []} = props
+  const snapPoints = useMemo(() => ['100%'], [])
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [search, setSearch] = useState('')
   const [users, setUsers] = useState<any[]>([])
   const usersRef = useRef<any[]>([])
   const mapAlreadyUsers = useMemo(() => _.map(usersData, (i) => i?.number), [usersData])
-  const [isLoading, setISLoading] = useState(false)
+  const [isLoading, setISLoading] = useState(true)
 
   const getUserFromDevice = useCallback(() => {
-    Contacts.getAllWithoutPhotos().then((resp) => {
-      const validNumber = _.map(resp, (i) => {
-        return {
-          id: uuid(),
-          name: i?.displayName || `${i?.familyName} ${i?.givenName}`,
-          number: _.uniqBy(i?.phoneNumbers, (n) => n?.number).filter(
-            (n) => n?.number?.length > 9
-          )[0]?.number,
-          email: i?.emailAddresses?.length > 0 ? i?.emailAddresses[0].email : '',
-          value: i?.displayName || `${i?.familyName} ${i?.givenName}`
-        }
-      })
-      const filterEampty = _.filter(validNumber, (i: any) => i?.number)
-      const codeNumber = _.map(filterEampty, (i: any) => {
-        return {...i, number: Utility.removeCode(i.number)}
-      })
-      const withSelected = _.map(filterEampty, (i: any) => {
-        return {...i, isSelected: _.includes(mapAlreadyUsers, i?.number)}
-      })
+    Contacts.getAllWithoutPhotos()
+      .then((resp) => {
+        setISLoading(false)
+        const validNumber = _.map(resp, (i) => {
+          return {
+            id: uuid(),
+            name: i?.displayName || `${i?.familyName} ${i?.givenName}`,
+            number: _.uniqBy(i?.phoneNumbers, (n) => n?.number).filter(
+              (n) => n?.number?.length > 9
+            )[0]?.number,
+            email: i?.emailAddresses?.length > 0 ? i?.emailAddresses[0].email : '',
+            value: i?.displayName || `${i?.familyName} ${i?.givenName}`
+          }
+        })
+        const filterEampty = _.filter(validNumber, (i: any) => i?.number)
 
-      setUsers(withSelected)
-      usersRef.current = codeNumber
-    })
+        const withSelectedUsers = _.map(usersData, (i: any) => {
+          return {...i, isSelected: true}
+        })
+
+        const withSelected = _.map(filterEampty, (i: any) => {
+          return {...i, isSelected: _.includes(mapAlreadyUsers, i?.number)}
+        })
+        const mergedData = _.unionBy([...withSelected, ...withSelectedUsers], (i) => i?.number)
+
+        setUsers(mergedData)
+        usersRef.current = mergedData
+      })
+      .catch(() => setISLoading(false))
   }, [mapAlreadyUsers])
 
   const onPressItem = useCallback(
@@ -68,7 +74,6 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
       const index = _.findIndex(clone, (i: any) => i?.number === item?.number)
       clone[index].isSelected = !clone[index].isSelected
       clone[index].isEdited = true
-
       usersRef.current = clone
       setUsers(clone)
     },
@@ -79,26 +84,28 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
     Permission.getContactPermission().then((resp) => {
       if (resp) {
         getUserFromDevice()
+      } else {
+        Alert.alert(
+          'Reeva',
+          'Please allow permission to access contacts',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel'
+            },
+            {text: 'Change Permission', onPress: () => openSettings()}
+          ],
+          {userInterfaceStyle: 'light'}
+        )
       }
     })
   }, [getUserFromDevice])
 
-  const onHandleSearch = useCallback(() => {
-    if (!Utility.isEmpty(search)) {
-      setUsers(usersRef.current)
-    } else {
-      const filter = _.filter(users, (i: any) => {
-        return i?.value?.toLowerCase().indexOf(search?.toLowerCase()) > -1
-      })
-      setUsers(filter)
+  const onPressSave = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
     }
-  }, [search, users])
-
-  useEffect(() => {
-    onHandleSearch()
-  }, [search])
-
-  const onPressSave = useCallback(() => {
     const payloadUsers = _.map(users, (i) => {
       return {
         name: i?.name,
@@ -112,20 +119,21 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
       }
     })
     const filterData = _.filter(payloadUsers, (i) => i?.isEdited)
-    if (filterData.length > 0) {
-      setISLoading(true)
-      APICall('post', filterData, EndPoints.getContacts).then(() => {
-        setTimeout(() => {
-          setISLoading(false)
-          onUserUpdate(filterData)
-          bottomSheetRef.current?.close()
-        }, 1000)
+    const uniqContacts = _.uniqBy(filterData, (i) => i?.number)
+
+    if (uniqContacts.length > 0) {
+      APICall('post', uniqContacts, EndPoints.getContacts).then(() => {
+        Alert.alert(
+          'Reeva',
+          English.R188,
+          [{text: 'OK', onPress: () => bottomSheetRef.current?.close()}],
+          {userInterfaceStyle: 'light'}
+        )
       })
     } else {
       bottomSheetRef.current?.close()
-      setISLoading(false)
     }
-  }, [mapAlreadyUsers, onUserUpdate, users])
+  }, [mapAlreadyUsers, users])
 
   const renderList = useMemo(() => {
     const DATA = _(users)
@@ -135,10 +143,12 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
       .value()
 
     return (
-      <BottomSheetSectionList
+      <CustomSectionList
+        Component={BottomSheetSectionList}
         sections={DATA}
-        contentContainerStyle={DATA.length === 0 && CommonStyles.flex}
-        ListEmptyComponent={() => <EmptyComponent />}
+        searchAttribute={'value'}
+        searchTerm={search}
+        bounces={false}
         showsVerticalScrollIndicator={false}
         stickySectionHeadersEnabled
         keyExtractor={(item: any) => item?.id}
@@ -148,7 +158,7 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
         renderSectionHeader={({section: {title}}) => <TitleText>{title}</TitleText>}
       />
     )
-  }, [onPressItem, users])
+  }, [onPressItem, users, search])
 
   const renderSearchInput = useMemo(() => {
     return (
@@ -195,15 +205,8 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
         </View>
         {renderSearchInput}
 
-        {renderList}
+        {isLoading ? <LoadingView /> : renderList}
       </BottomSheet>
-      {isLoading && (
-        <View style={styles.loaderContainer}>
-          <View style={styles.contianer}>
-            <ActivityIndicator size={'large'} color={Colors.ThemeColor} />
-          </View>
-        </View>
-      )}
     </>
   )
 }
@@ -231,30 +234,6 @@ const styles = StyleSheet.create({
     bottom: verticalScale(10)
   },
   bottomSheetStyle: {
-    padding: scale(20)
-  },
-  contianer: {
-    width: verticalScale(100),
-    height: verticalScale(100),
-    backgroundColor: Colors.white,
-    borderRadius: moderateScale(15),
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 3
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    elevation: 6
-  },
-  loaderContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.backDrop,
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center'
+    padding: scale(10)
   }
 })

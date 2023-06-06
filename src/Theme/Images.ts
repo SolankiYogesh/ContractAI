@@ -47,5 +47,13 @@ export default {
   send: require('../Resources/Images/send.png'),
   loader: require('../Resources/Animations/loader.json'),
   logo: require('../Resources/Images/logo.png'),
-  themeAnimation: require('../Resources/Animations/themeAnimation.json')
+  themeAnimation: require('../Resources/Animations/themeAnimation.json'),
+  trash: require('../Resources/Images/trash.png'),
+  send_email: require('../Resources/Images/send_email.png'),
+  apple: require('../Resources/Images/apple.png'),
+  profile: require('../Resources/Images/profile.png'),
+  animated: require('../Resources/Animations/animated.json'),
+  static: require('../Resources/Animations/static.json'),
+  Reeva: require('../Resources/Images/Reeva.png'),
+  Home: require('../Resources/Images/Home.png')
 }

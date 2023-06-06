@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "888349926539",
+    "project_id": "reeva-766c0",
+    "storage_bucket": "reeva-766c0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888349926539:android:f728944aee9cbec309e08e",
+        "android_client_info": {
+          "package_name": "com.reeva"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "888349926539-nb33bmvl7uog9scuucloa93v4g56vg7d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkNDSBQonsbOS86z6Qs7FUmgLn4cWjZmA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "888349926539-nb33bmvl7uog9scuucloa93v4g56vg7d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

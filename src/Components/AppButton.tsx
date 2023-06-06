@@ -1,12 +1,5 @@
 import React from 'react'
-import {
-  ImageSourcePropType,
-  ImageStyle,
-  StyleProp,
-  StyleSheet,
-  TextStyle,
-  ViewStyle
-} from 'react-native'
+import {ImageSourcePropType, ImageStyle, StyleProp, TextStyle, ViewStyle} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import styled from 'styled-components/native'
 
@@ -50,7 +43,7 @@ const AppButton = (props: AppButtonProps) => {
         start={{x: 0, y: 0}}
         end={{x: 1, y: 1}}
         angle={91.48}
-        style={[CommonStyles.flex, CommonStyles.centerItem, disabled && styles.disabledButton]}
+        style={[CommonStyles.flex, CommonStyles.centerItem]}
       >
         <InnerView>
           {!!leftImage && (
@@ -95,9 +88,3 @@ const InnerView = styled.View`
   align-self: center;
   justify-content: center;
 `
-const styles = StyleSheet.create({
-  disabledButton: {
-    borderWidth: 2,
-    borderColor: Colors.greyShadeE8
-  }
-})

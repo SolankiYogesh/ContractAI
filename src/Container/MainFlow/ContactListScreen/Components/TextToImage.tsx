@@ -1,5 +1,5 @@
 import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import {StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import Skeleton from '@thevsstech/react-native-skeleton'
 import styled from 'styled-components/native'
@@ -9,8 +9,16 @@ import {Fonts} from '../../../../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
 import Utility from '../../../../Theme/Utility'
 
-const TextToImage = ({text = '', style = {}, isLoading = false}) => {
-  const containerStyle = {
+interface TextToImageProps {
+  text?: string
+  style?: StyleProp<ViewStyle>
+  isLoading?: boolean
+  fontSize?: number
+}
+
+const TextToImage = (props: TextToImageProps) => {
+  const {text = '', style = {}, isLoading = false, fontSize} = props
+  const containerStyle: any = {
     width: verticalScale(45),
     height: verticalScale(45),
     alignItems: 'center',
@@ -34,7 +42,7 @@ const TextToImage = ({text = '', style = {}, isLoading = false}) => {
           </Skeleton>
         </View>
       )}
-      {!isLoading && <InnerText>{Utility.convert(text)}</InnerText>}
+      {!isLoading && <InnerText fontSize={fontSize}>{Utility.convert(text)}</InnerText>}
     </LinearGradient>
   )
 }
@@ -42,7 +50,8 @@ const TextToImage = ({text = '', style = {}, isLoading = false}) => {
 export default TextToImage
 
 const InnerText = styled.Text`
-  font-size: ${moderateScale(18)}px;
+  font-size: ${(props: any) =>
+    props?.fontSize ? moderateScale(props?.fontSize) : moderateScale(18)}px;
   font-family: ${Fonts.ThemeSemiBold};
   color: ${Colors.ThemeColor};
 `

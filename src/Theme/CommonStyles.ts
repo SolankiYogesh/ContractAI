@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native'
 
-import {W_HEIGHT, W_WIDTH} from '../Theme/Responsive'
+import {verticalScale, W_HEIGHT, W_WIDTH} from '../Theme/Responsive'
 import Colors from './Colors'
 
 export const CommonStyles = StyleSheet.create({
@@ -31,7 +31,8 @@ export const CommonStyles = StyleSheet.create({
   onlyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center'
+    alignSelf: 'center',
+    marginTop: verticalScale(5)
   },
   bodyStyle: {
     backgroundColor: Colors.white

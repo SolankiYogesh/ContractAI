@@ -1,43 +1,35 @@
 import React from 'react'
-import {View} from 'react-native'
+import {FlatList, View} from 'react-native'
 
 import AppButton from '../../../../Components/AppButton'
 import English from '../../../../Resources/Locales/English'
-import {Colors} from '../../../../Theme'
-import {CommonStyles} from '../../../../Theme/CommonStyles'
+import {PlanTabProps, styles} from '../PremiumPlanScreen'
 import PlanItem from './PlanItem'
-import {InnerContainer, PlanList, PlanTitle} from './PlanTabBar'
+import {InnerContainer, PlanTitle} from './PlanTabBar'
 
 const data = [English.R111, English.R112, English.R113]
 
-const FreePlan = () => {
+const FreePlan = ({isCurrentPlan}: PlanTabProps) => {
   return (
-    <View style={[CommonStyles.centerItem, CommonStyles.flex]}>
+    <View style={styles.tabContainer}>
       <InnerContainer>
         <PlanTitle isSpace>{English.R108}</PlanTitle>
-        <PlanList
+        <FlatList
           data={data}
           scrollEnabled={false}
           renderItem={({item}: any) => <PlanItem item={item} />}
         />
-        <AppButton
-          textStyle={textStyle}
-          style={buttonStyle}
-          isGradient={false}
-          title={English.R114}
-        />
+        {isCurrentPlan && (
+          <AppButton
+            textStyle={styles.textStyle}
+            style={styles.buttonStyle}
+            isGradient={false}
+            title={English.R114}
+          />
+        )}
       </InnerContainer>
     </View>
   )
 }
 
 export default FreePlan
-
-const buttonStyle = {
-  borderWidth: 2,
-  borderColor: Colors.ThemeColor
-}
-
-const textStyle = {
-  color: Colors.ThemeColor
-}

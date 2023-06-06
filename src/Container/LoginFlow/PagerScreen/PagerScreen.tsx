@@ -126,6 +126,6 @@ export const styles = StyleSheet.create({
     position: 'absolute'
   },
   width: {
-    marginBottom: verticalScale(20)
+    marginBottom: verticalScale(60)
   }
 })

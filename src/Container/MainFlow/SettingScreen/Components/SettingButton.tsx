@@ -1,11 +1,10 @@
 import React from 'react'
-import {ImageSourcePropType, StyleProp, TextStyle} from 'react-native'
+import {Image, ImageSourcePropType, ImageStyle, StyleProp, TextStyle, ViewStyle} from 'react-native'
 import styled from 'styled-components/native'
 
 import {Colors, Images} from '../../../../Theme'
 import {Fonts} from '../../../../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
-import {ImageContainer} from '../SettingScreen'
 
 interface SettingButtonProps {
   title?: string
@@ -17,6 +16,9 @@ interface SettingButtonProps {
   titleStyle?: StyleProp<TextStyle>
   fontSize?: number
   isMargin?: boolean
+  marginVertical?: number
+  imageStyle?: StyleProp<ImageStyle>
+  style?: StyleProp<ViewStyle>
 }
 
 const SettingButton = (props: SettingButtonProps) => {
@@ -29,15 +31,23 @@ const SettingButton = (props: SettingButtonProps) => {
     isMarginLeft = true,
     titleStyle = {},
     fontSize = 14,
-    isMargin = false
+    isMargin = false,
+    marginVertical,
+    imageStyle = {},
+    style = {}
   } = props
   return (
-    <SettingContainer onPress={onPress} isMarginLeft={isMarginLeft}>
+    <SettingContainer
+      marginVertical={marginVertical}
+      style={style}
+      onPress={onPress}
+      isMarginLeft={isMarginLeft}
+    >
       {image && <ButtonImage source={image} />}
       <ButtonText isMargin={isMargin} fontSize={fontSize} style={titleStyle} color={color}>
         {title}
       </ButtonText>
-      {isArrow && <ImageContainer color={color} source={Images.right_arrow} />}
+      {isArrow && <Image style={imageStyle} source={Images.right_arrow} />}
     </SettingContainer>
   )
 }
@@ -49,9 +59,8 @@ const SettingContainer = styled.TouchableOpacity`
   align-items: center;
   margin-left: ${(props: any) => (props?.isMarginLeft ? scale(20) : 0)}px;
   margin-right: ${(props: any) => (props?.isMarginLeft ? scale(20) : 0)}px;
-  margin-top: ${verticalScale(10)}px;
-  margin-bottom: ${verticalScale(10)}px;
-  /* background-color: red; */
+  margin-top: ${(props: any) => verticalScale(props?.marginVertical || 10)}px;
+  margin-bottom: ${(props: any) => verticalScale(props?.marginVertical ? 10 : 10)}px;
 `
 const ButtonText = styled.Text`
   margin-left: ${(props: any) => (!props?.isMargin ? scale(16) : scale(10))}px;
@@ -61,7 +70,5 @@ const ButtonText = styled.Text`
   color: ${(props: any) => props?.color || Colors.blackShade236};
 `
 const ButtonImage = styled.Image`
-  /* width: ${verticalScale(30)}px;
-  height: ${verticalScale(30)}px;
-  tint-color: ${Colors.blackShade236}; */
+  tint-color: ${Colors.blackShade236};
 `

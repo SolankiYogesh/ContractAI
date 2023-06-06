@@ -19,8 +19,13 @@ const UserSlice = createSlice({
     },
     logOut: (state) => {
       state.userData = null
+    },
+    setPlanData: (state, action) => {
+      const cloneUser = Utility.deepClone(state?.userData)
+      cloneUser.plan_details = {...(cloneUser?.plan_details || {}), ...action.payload}
+      state.userData = cloneUser
     }
   }
 })
-export const {logOut, setUserData, setToken} = UserSlice.actions
+export const {logOut, setUserData, setToken, setPlanData} = UserSlice.actions
 export default UserSlice.reducer

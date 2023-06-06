@@ -1,14 +1,40 @@
 import {Alert} from 'react-native'
+import NetInfo from '@react-native-community/netinfo'
 import {GoogleSignin} from '@react-native-google-signin/google-signin'
 import Voice from '@react-native-voice/voice'
 import _ from 'lodash'
+
+import {AudioFiles} from '../types/Types'
 
 const deepClone = (val: any) => {
   return _.cloneDeep(val)
 }
 
+const wait = (seconds = 1000): Promise<void> => {
+  return new Promise((resolve: () => void) => {
+    setTimeout(resolve, seconds)
+  })
+}
+
+const isInternet = () => {
+  return new Promise<boolean>(async (resolve) => {
+    try {
+      const response = await NetInfo.fetch()
+      if (response.isConnected) {
+        resolve(true)
+      } else {
+        Utility.showAlert('No Internet Connection')
+        resolve(false)
+      }
+    } catch (error) {
+      Utility.showAlert('No Internet Connection')
+      resolve(false)
+    }
+  })
+}
+
 const isValid = (value: string) => {
-  const reg = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
+  const reg = /\S+@\S+\.\S+/
   return !value.trim() || !reg.test(value.trim())
 }
 
@@ -20,53 +46,21 @@ const secondsToMMSS = (seconds: number) => {
   return new Date(seconds * 1000).toISOString().substring(14, 19)
 }
 
-export const getRandomSentenceWithDelay = () => {
-  const sentences = [
-    {
-      text: 'Hi there! Are you interested in buying or selling a property?',
-      audio: 'https://reactuiregister.000webhostapp.com/1.mp3'
-    },
-    {
-      text: 'Good afternoon! How may I assist you with your real estate needs?',
-      audio: 'https://reactuiregister.000webhostapp.com/2.mp3'
-    },
-    {
-      text: 'Hello and welcome! How can I help you find your dream home today?',
-      audio: 'https://reactuiregister.000webhostapp.com/3.mp3'
-    },
-    {
-      text: "Hi, I'm Reeva. How can I help you with your property search?",
-      audio: 'https://reactuiregister.000webhostapp.com/4.mp3'
-    }
-  ]
-
-  const randomIndex = Math.floor(Math.random() * sentences.length)
-  return sentences[randomIndex]
-}
-
 const getTimeString = () => {
   const currentDate = new Date()
-
   // Get the current hour
   const currentHour = currentDate.getHours()
-
-  // Define the times of day
-  const MORNING = 'morning'
-  const AFTERNOON = 'afternoon'
-  const EVENING = 'evening'
-  const NIGHT = 'night'
-
   // Determine the time of day based on the current hour
   let timeOfDay
-  if (currentHour >= 5 && currentHour < 12) {
-    timeOfDay = MORNING
+
+  if (currentHour >= 0 && currentHour < 12) {
+    timeOfDay = 'Morning'
   } else if (currentHour >= 12 && currentHour < 18) {
-    timeOfDay = AFTERNOON
-  } else if (currentHour >= 18 && currentHour < 22) {
-    timeOfDay = EVENING
-  } else {
-    timeOfDay = NIGHT
+    timeOfDay = 'Afternoon'
+  } else if (currentHour >= 18 && currentHour < 24) {
+    timeOfDay = 'Evening'
   }
+
   return timeOfDay
 }
 
@@ -99,7 +93,17 @@ const googleLogin = () => {
 
 const showAlert = (message = '') => {
   if (message) {
-    Alert.alert('Reeva', message, undefined, {userInterfaceStyle: 'light'})
+    Alert.alert(
+      'Reeva',
+      message,
+      [
+        {
+          text: 'OK',
+          style: 'cancel'
+        }
+      ],
+      {userInterfaceStyle: 'light'}
+    )
   }
 }
 
@@ -191,20 +195,48 @@ const destroyVoice = () => {
   }
 }
 
-const removeCode = (value: string) => {
-  let mobile = ''
-  value = value.replace(/\s/g, '')
-  if (value.startsWith('+')) {
-    const temp = value.substring(3, value.length)
-    mobile = temp
-  } else {
-    mobile = value
-  }
-  return mobile
-}
-
 const extractBracketWords = (str: string) => {
   return str.match(/(\[[^\]]+\])/g)
+}
+
+const getAudioFile = (key: string) => {
+  const files: AudioFiles = {
+    1: require('../Resources/Audio/1.mp3'),
+    2: require('../Resources/Audio/2.mp3'),
+    3: require('../Resources/Audio/3.mp3'),
+    4: require('../Resources/Audio/4.mp3'),
+    5: require('../Resources/Audio/5.mp3'),
+    6: require('../Resources/Audio/6.mp3'),
+    7: require('../Resources/Audio/7.mp3'),
+    9: require('../Resources/Audio/9.mp3'),
+    10: require('../Resources/Audio/10.mp3'),
+    11: require('../Resources/Audio/11.mp3'),
+    12: require('../Resources/Audio/12.mp3'),
+    13: require('../Resources/Audio/13.mp3'),
+    14: require('../Resources/Audio/14.mp3'),
+    15: require('../Resources/Audio/15.mp3'),
+    16: require('../Resources/Audio/16.mp3'),
+    17: require('../Resources/Audio/17.mp3'),
+    18: require('../Resources/Audio/18.mp3'),
+    19: require('../Resources/Audio/19.mp3'),
+    20: require('../Resources/Audio/20.mp3'),
+    21: require('../Resources/Audio/21.mp3'),
+    22: require('../Resources/Audio/22.mp3'),
+    23: require('../Resources/Audio/23.mp3'),
+    24: require('../Resources/Audio/24.mp3'),
+    25: require('../Resources/Audio/25.mp3'),
+    26: require('../Resources/Audio/26.mp3'),
+    27: require('../Resources/Audio/27.mp3'),
+    28: require('../Resources/Audio/28.mp3'),
+    29: require('../Resources/Audio/29.mp3'),
+    30: require('../Resources/Audio/30.mp3'),
+    31: require('../Resources/Audio/31.mp3'),
+    32: require('../Resources/Audio/32.mp3'),
+    33: require('../Resources/Audio/33.mp3'),
+    34: require('../Resources/Audio/34.mp3')
+  }
+
+  return files[Number(key)]
 }
 
 const Utility = {
@@ -213,7 +245,7 @@ const Utility = {
   validatePassword,
   secondsToMMSS,
   getTimeString,
-  getRandomSentenceWithDelay,
+  getAudioFile,
   navigationOptions,
   isEmpty,
   googleLogin,
@@ -223,8 +255,9 @@ const Utility = {
   hideEmail,
   convert,
   destroyVoice,
-  removeCode,
-  extractBracketWords
+  isInternet,
+  extractBracketWords,
+  wait
 }
 
 export default Utility

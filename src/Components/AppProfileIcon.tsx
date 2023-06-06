@@ -64,7 +64,7 @@ const AppProfileImage = (props: AppProfileImageProps) => {
       ) : (
         <AppLoadingImage
           borderRadius={moderateScale(5)}
-          url={url || 'https://i.ibb.co/znvXjTV/untitled.png'}
+          url={url}
           style={[styles.profileImage, imageStyle]}
         />
       )}

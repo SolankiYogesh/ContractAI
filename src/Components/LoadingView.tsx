@@ -1,11 +1,15 @@
 import React from 'react'
-import {ActivityIndicator, StyleSheet, View} from 'react-native'
+import {ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
 
 import {Colors} from '../Theme'
 
-const LoadingView = () => {
+interface LoadingViewProps {
+  style?: StyleProp<ViewStyle>
+}
+
+const LoadingView = ({style = {}}: LoadingViewProps) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <ActivityIndicator size={'large'} color={Colors.ThemeColor} />
     </View>
   )

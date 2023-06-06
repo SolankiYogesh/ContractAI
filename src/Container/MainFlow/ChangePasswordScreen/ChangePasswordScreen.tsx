@@ -58,7 +58,11 @@ const ChangePasswordScreen = () => {
     dispatch(logOut())
   }, [dispatch, navigation])
 
-  const onPressChangePassword = useCallback(() => {
+  const onPressChangePassword = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const isMatching = password === confirmPassword
     setISPasswordError(!isMatching)
     if (!isMatching) {
@@ -68,14 +72,27 @@ const ChangePasswordScreen = () => {
       old_password: oldPassword,
       new_password: password
     }
-    APICall('put', payload, EndPoints.changePassword).then((resp: any) => {
-      Loader.isLoading(false)
-      Utility.showAlert(resp?.data?.message)
-      if (resp?.status === 200) {
-        onPressLogOut()
-      }
-    })
+    Loader.isLoading(true)
+    APICall('put', payload, EndPoints.changePassword)
+      .then((resp: any) => {
+        Loader.isLoading(false)
+        Utility.showAlert(resp?.data?.message)
+        if (resp?.status === 200) {
+          onPressLogOut()
+        }
+      })
+      .catch(() => Loader.isLoading(false))
   }, [password, confirmPassword, oldPassword, onPressLogOut])
+
+  const onChangeTextPassword = useCallback((text: string) => {
+    setISPasswordError(false)
+    setPassword(text)
+  }, [])
+
+  const onChangeTextConfirmPassword = useCallback((text: string) => {
+    setISPasswordError(false)
+    setConfirmPassword(text)
+  }, [])
 
   return (
     <AppContainer>
@@ -91,6 +108,7 @@ const ChangePasswordScreen = () => {
             autoCapitalize={'none'}
             autoCorrect={false}
             spellCheck={false}
+            isAnimated
             returnKeyType={'next'}
             ContainerStyle={styles.inputStyle}
             placeholder={English.R144}
@@ -98,10 +116,11 @@ const ChangePasswordScreen = () => {
           />
           <AppInput
             value={password}
-            onChangeText={setPassword}
+            onChangeText={onChangeTextPassword}
             ref={passwordRef}
             isPassword
             isEye
+            isAnimated
             autoComplete={'off'}
             autoCapitalize={'none'}
             autoCorrect={false}
@@ -113,9 +132,10 @@ const ChangePasswordScreen = () => {
           />
           {isPasswordError && <ErrorText errorText={English.R52} />}
           <AppInput
+            isAnimated
             autoComplete={'off'}
             value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            onChangeText={onChangeTextConfirmPassword}
             ref={confirmPasswordRef}
             isPassword
             isEye
@@ -127,7 +147,6 @@ const ChangePasswordScreen = () => {
             placeholder={English.R146}
             onSubmitEditing={onPressChangePassword}
           />
-          {isPasswordError && <ErrorText errorText={English.R52} />}
         </AppScrollView>
         <AppButton
           disabled={!isEnabled}

@@ -24,17 +24,17 @@ import Utility from '../../../Theme/Utility'
 
 const BrokerRegisterScreen = () => {
   const navigation: any = useNavigation()
-  const [brokerName, setBrokername] = useState('')
-  const [brokerAddress, setBrokerAddress] = useState('')
+  const [brokerName, setBrokername] = useState(Constant.BROKERDATA?.broker_name || '')
+  const [brokerAddress, setBrokerAddress] = useState(Constant.BROKERDATA?.broker_address || '')
   const brokerAddRef = useRef<TextInput>(null)
-  const [licence, setLicence] = useState('')
+  const [licence, setLicence] = useState(Constant.BROKERDATA?.broker_license_no || '')
   const licenceRef = useRef<TextInput>(null)
-  const [sLNumber, setSLNumber] = useState('')
-  const [PTC, setPTC] = useState('')
-  const [PTCA, setPTCA] = useState('')
+  const [sLNumber, setSLNumber] = useState(Constant.BROKERDATA?.supervisor_license_no || '')
+  const [PTC, setPTC] = useState(Constant.BROKERDATA?.title_company || '')
+  const [PTCA, setPTCA] = useState(Constant.BROKERDATA?.title_company_address || '')
   const dispatch = useDispatch()
   const [isEnabled, setISEnabled] = useState(false)
-  const [sName, setSName] = useState('')
+  const [sName, setSName] = useState(Constant.BROKERDATA?.supervisor_name || '')
   const sNameRef = useRef<TextInput>(null)
   const sNumberRef = useRef<TextInput>(null)
   const ptcRef = useRef<TextInput>(null)
@@ -60,7 +60,7 @@ const BrokerRegisterScreen = () => {
       Constant.refresh = resp?.data?.refresh_token
       const cloneData = Utility.deepClone(resp?.data?.data)
       cloneData.token = resp?.data?.token
-      cloneData.refresh = resp?.data?.refresh_token
+      cloneData.refresh_token = resp?.data?.refresh_token
 
       dispatch(setUserData(cloneData))
 
@@ -81,7 +81,7 @@ const BrokerRegisterScreen = () => {
     [dispatch, navigation]
   )
 
-  const onPressRegister = useCallback(() => {
+  const onPressRegister = useCallback(async () => {
     if (!Utility.isEmpty(brokerName)) {
       return
     }
@@ -95,6 +95,10 @@ const BrokerRegisterScreen = () => {
       return
     }
     if (!Utility.isEmpty(sLNumber)) {
+      return
+    }
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
       return
     }
 
@@ -124,7 +128,11 @@ const BrokerRegisterScreen = () => {
     APICall(
       userData?.isGoogle ? 'put' : 'post',
       payload,
-      userData?.isGoogle ? EndPoints.googleLogin : EndPoints.register,
+      userData?.isApple
+        ? EndPoints.appleLogin
+        : userData?.isGoogle
+        ? EndPoints.googleLogin
+        : EndPoints.register,
       {},
       false
     )
@@ -132,6 +140,15 @@ const BrokerRegisterScreen = () => {
         Loader.isLoading(false)
 
         if (resp?.status === 201) {
+          Constant.BROKERDATA = {
+            broker_name: brokerName,
+            broker_address: brokerAddress,
+            broker_license_no: licence,
+            supervisor_name: sName,
+            supervisor_license_no: sLNumber,
+            title_company: PTC,
+            title_company_address: PTCA
+          }
           navigation.navigate(Screens.VerificationScreen, {
             isRegister: true,
             email: userData?.email
@@ -156,6 +173,7 @@ const BrokerRegisterScreen = () => {
     userData?.address,
     userData?.userLicence,
     userData?.isGoogle,
+    userData?.isApple,
     userData?.password,
     PTC,
     PTCA,
@@ -163,18 +181,35 @@ const BrokerRegisterScreen = () => {
     onLoginSetup
   ])
 
+  const onPressBack = useCallback(() => {
+    Constant.BROKERDATA = {
+      broker_name: brokerName,
+      broker_address: brokerAddress,
+      broker_license_no: licence,
+      supervisor_name: sName,
+      supervisor_license_no: sLNumber,
+      title_company: PTC,
+      title_company_address: PTCA
+    }
+    navigation.goBack()
+  }, [PTC, PTCA, brokerAddress, brokerName, licence, navigation, sLNumber, sName])
+
   return (
     <AppContainer>
       <ScrollContainer>
         <AppScrollView>
-          <AppLogo />
+          <AppLogo isBack onPressBack={onPressBack} />
+
           <GettingText isTopMargin top={20}>
             {English.R74}
           </GettingText>
-          <CreateAnAccountText>{English.R24}</CreateAnAccountText>
+          <CreateAnAccountText>{English.R193}</CreateAnAccountText>
           <AppInput
             value={brokerName}
-            onChangeText={(text) => setBrokername(text.replace(/[^a-z]/gi, ''))}
+            onChangeText={(text) =>
+              // setBrokername(_.join(_.split(text.replace(/[^a-z]/gi, ''), ' ')))
+              setBrokername(text.replace(/[^\w\s]/gi, '').replace(/[0-9]/g, ''))
+            }
             returnKeyType={'next'}
             ContainerStyle={styles.inputStyle}
             placeholder={English.R75}
@@ -200,7 +235,7 @@ const BrokerRegisterScreen = () => {
           />
           <AppInput
             value={sName}
-            onChangeText={(text) => setSName(text.replace(/[^a-z]/gi, ''))}
+            onChangeText={(text) => setSName(text.replace(/[^\w\s]/gi, '').replace(/[0-9]/g, ''))}
             ref={sNameRef}
             returnKeyType={'next'}
             ContainerStyle={styles.inputStyle}

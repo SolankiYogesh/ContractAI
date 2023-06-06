@@ -3,7 +3,6 @@ import {Image, StyleSheet, Text, TouchableOpacity} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 
 import {Colors, Images, Screens} from '../../../../Theme'
-import {CommonStyles} from '../../../../Theme/CommonStyles'
 import {Fonts} from '../../../../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
 
@@ -34,7 +33,15 @@ const TemplateItem = ({item, contactItem}: any) => {
 export default TemplateItem
 const styles = StyleSheet.create({
   templateContainer: {
-    ...CommonStyles.shadow,
+    backgroundColor: Colors.white,
+    shadowColor: Colors.greyShade9C9D,
+    shadowOffset: {
+      width: 0,
+      height: 16
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 42,
+    elevation: 3,
     padding: scale(15),
     marginHorizontal: scale(20),
     marginVertical: verticalScale(10),
@@ -49,8 +56,6 @@ const styles = StyleSheet.create({
     flex: 1
   },
   sendImage: {
-    width: verticalScale(30),
-    height: verticalScale(30),
     tintColor: Colors.ThemeColor
   }
 })

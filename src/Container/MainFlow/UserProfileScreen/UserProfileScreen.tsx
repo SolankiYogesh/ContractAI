@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react'
-import {Alert, StyleSheet} from 'react-native'
+import {Alert, StyleSheet, View} from 'react-native'
 import ParallaxScrollView from 'react-native-parallax-scroll-view'
 import {useDispatch, useSelector} from 'react-redux'
 import {CommonActions, useNavigation} from '@react-navigation/native'
@@ -36,7 +36,11 @@ const UserProfileScreen = () => {
   const HEADER_HEIGHT = verticalScale(100)
   const user = useSelector((state: any) => state?.user?.userData)
 
-  const setupData = useCallback(() => {
+  const setupData = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     setISLoading(true)
     APICall('get', {}, EndPoints.editProfile)
       .then((resp: any) => {
@@ -84,24 +88,30 @@ const UserProfileScreen = () => {
     dispatch(logOut())
   }, [dispatch, navigation])
 
-  const onPressDeleteAccount = useCallback(() => {
+  const onPressDeleteAccount = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const payload = {
       disable_account: true
     }
-    APICall('post', payload, EndPoints.deleteAccount).then((resp: any) => {
-      Loader.isLoading(false)
+    APICall('post', payload, EndPoints.deleteAccount)
+      .then((resp: any) => {
+        Loader.isLoading(false)
 
-      Utility.showAlert(resp?.data?.message)
-      if (resp?.status === 200) {
-        onLogOut()
-      }
-    })
+        Utility.showAlert(resp?.data?.message)
+        if (resp?.status === 200) {
+          onLogOut()
+        }
+      })
+      .catch(() => Loader.isLoading(false))
   }, [onLogOut])
 
   const onPressDelete = useCallback(() => {
     Alert.alert(
       'Warning',
-      'Are you sure that you want to delete your account ?',
+      'Are you sure that you want to delete your account?',
       [
         {
           text: 'Cancel',
@@ -124,14 +134,60 @@ const UserProfileScreen = () => {
   )
 
   const renderDataView = useCallback(
-    (children: React.ReactNode) => {
+    (label: string, value: string) => {
       return isLoading ? (
-        <Skeleton>
-          <Skeleton.Item width={widthPx(30)} height={verticalScale(25)} borderRadius={4} />
-          <Skeleton.Item width={widthPx(30)} height={verticalScale(25)} borderRadius={4} />
+        <Skeleton
+          marginLeft={scale(20)}
+          marginRight={scale(20)}
+          marginTop={scale(10)}
+          marginBottom={scale(10)}
+        >
+          <Skeleton.Item
+            marginLeft={scale(20)}
+            marginRight={scale(20)}
+            height={verticalScale(25)}
+            borderRadius={4}
+            marginTop={scale(10)}
+          />
+          <Skeleton.Item
+            marginLeft={scale(20)}
+            marginRight={scale(20)}
+            height={verticalScale(25)}
+            borderRadius={4}
+            marginTop={scale(10)}
+          />
         </Skeleton>
       ) : (
-        children
+        <>
+          <LabelView>
+            <LabeledText fontSize={13} color={Colors.greyShadeB1B5} isLeft>
+              {label}
+            </LabeledText>
+            <LabeledText color={Colors.greyShade595}>{value}</LabeledText>
+            {!isLoading && <View style={styles.devider} />}
+          </LabelView>
+        </>
+      )
+    },
+    [isLoading]
+  )
+
+  const renderLabelView = useCallback(
+    (label: string) => {
+      return isLoading ? (
+        <Skeleton>
+          <Skeleton.Item
+            marginTop={verticalScale(25)}
+            marginLeft={verticalScale(10)}
+            width={widthPx(30)}
+            height={verticalScale(25)}
+            borderRadius={4}
+          />
+        </Skeleton>
+      ) : (
+        <LabeledText left={10} top={25} fontSize={14} color={Colors.greyShade263}>
+          {label}
+        </LabeledText>
       )
     },
     [isLoading]
@@ -146,7 +202,7 @@ const UserProfileScreen = () => {
       style={CommonStyles.flex}
     >
       <ParallaxScrollView
-        parallaxHeaderHeight={verticalScale(300)}
+        parallaxHeaderHeight={verticalScale(200)}
         stickyHeaderHeight={HEADER_HEIGHT}
         bounces={false}
         showsVerticalScrollIndicator={false}
@@ -165,8 +221,7 @@ const UserProfileScreen = () => {
           size={100}
           style={styles.profileImage}
           isLoading={isLoading}
-          borderColor={Colors.white}
-          borderWidth={4}
+          borderWidth={0}
           url={user?.profile_image}
         />
         <RoundView>
@@ -182,138 +237,39 @@ const UserProfileScreen = () => {
                     ? user?.first_name + ' ' + user?.last_name
                     : '-'}
                 </GettingText>
-                {(!!user?.first_name || !!user?.last_name) && <PencilIcon source={Images.pencil} />}
+                {(!!user?.first_name || !!user?.last_name) && (
+                  <PencilIcon tintColor={Colors.black} source={Images.pencil} />
+                )}
               </>
             )}
           </EditContainer>
-          {isLoading ? (
-            <Skeleton>
-              <Skeleton.Item width={widthPx(30)} height={verticalScale(25)} borderRadius={4} />
-            </Skeleton>
-          ) : (
-            <LabeledText color={Colors.greyShadeUnk}>{English.R132}</LabeledText>
-          )}
 
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R133}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {'+1 ' + (Utility.formateNumber(user?.phone_number) || '-')}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R134}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>{user?.email || '-'}</LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R168}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>{user?.license_no || '-'}</LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R174}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>{user?.address || '-'}</LabeledText>
-              </>
-            )}
-          </LabelView>
+          {renderLabelView(English.R132)}
 
-          {isLoading ? (
-            <Skeleton>
-              <Skeleton.Item width={widthPx(30)} height={verticalScale(25)} borderRadius={4} />
-            </Skeleton>
-          ) : (
-            <LabeledText color={Colors.greyShadeUnk}>{English.R150}</LabeledText>
-          )}
+          {renderDataView(English.R133, '+1 ' + (Utility.formateNumber(user?.phone_number) || '-'))}
+          {renderDataView(English.R134, user?.email || '-')}
+          {renderDataView(English.R168, user?.license_no || '-')}
+          {renderDataView(English.R174, user?.address || '-')}
 
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R136}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.broker_name || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
+          {renderLabelView(English.R150)}
 
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R137}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.broker_address || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R138}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.broker_license_no || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R175}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.supervisor_name || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R176}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.supervisor_license_no || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R180}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.title_company || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
-          <LabelView>
-            {renderDataView(
-              <>
-                <LabeledText>{English.R178}</LabeledText>
-                <LabeledText color={Colors.greyShade595}>
-                  {user?.broker?.title_company_address || '-'}
-                </LabeledText>
-              </>
-            )}
-          </LabelView>
+          {renderDataView(English.R136, user?.broker?.broker_name || '-')}
+          {renderDataView(English.R137, user?.broker?.broker_address || '-')}
+          {renderDataView(English.R138, user?.broker?.broker_license_no || '-')}
+          {renderDataView(English.R175, user?.broker?.supervisor_name || '-')}
+          {renderDataView(English.R176, user?.broker?.supervisor_license_no || '-')}
+          {renderDataView(English.R180, user?.broker?.title_company || '-')}
+          {renderDataView(English.R178, user?.broker?.title_company_address || '-')}
+
           <SettingButton
             isMarginLeft={false}
             color={Colors.ThemeColor}
             isArrow
+            marginVertical={100}
             isMargin
+            style={styles.settingStyle}
             fontSize={16}
+            imageStyle={styles.imageStyle}
             onPress={onPressChangePassword}
             title={English.R142}
           />
@@ -322,6 +278,8 @@ const UserProfileScreen = () => {
             textStyle={styles.textStyle}
             style={styles.buttonStyle}
             isGradient={false}
+            leftImageStyle={styles.leftImageStyle}
+            leftImage={Images.trash}
             title={English.R143}
           />
         </RoundView>
@@ -336,13 +294,15 @@ const styles = StyleSheet.create({
   headerStyle: {
     position: 'absolute',
     zIndex: 1000,
-    width: '100%',
-    top: STATUSBAR_HEIGHT
+    width: '85%',
+    top: STATUSBAR_HEIGHT,
+    marginLeft: 0,
+    alignSelf: 'center'
   },
   profileImage: {
     alignSelf: 'center',
     position: 'absolute',
-    top: -verticalScale(70),
+    top: -verticalScale(75),
     zIndex: 1000,
     backgroundColor: Colors.white
   },
@@ -350,13 +310,31 @@ const styles = StyleSheet.create({
     color: Colors.white
   },
   buttonStyle: {
-    backgroundColor: Colors.redShade,
     marginTop: verticalScale(30),
-    width: '90%'
+    width: '85%',
+    backgroundColor: Colors.white,
+    borderColor: Colors.redShade,
+    borderWidth: 1
   },
 
   textStyle: {
-    color: Colors.white
+    color: Colors.redShade
+  },
+  leftImageStyle: {
+    tintColor: Colors.redShade
+  },
+  devider: {
+    borderWidth: 1,
+    borderColor: Colors.greyShadeEBEB,
+    borderStyle: 'solid',
+    marginVertical: verticalScale(15)
+  },
+  imageStyle: {
+    marginRight: scale(10)
+  },
+  settingStyle: {
+    width: '90%',
+    alignSelf: 'center'
   }
 })
 
@@ -374,33 +352,28 @@ const UserImageContainer = styled.Image`
 `
 const RoundView = styled.View`
   flex: 1;
-  border-radius: ${moderateScale(25)}px;
-  padding: ${scale(10)}px;
   overflow: hidden;
   top: -${verticalScale(20)}px;
   background-color: ${Colors.white};
   padding-top: ${verticalScale(50)}px;
+  padding-bottom: ${verticalScale(10)}px;
 `
 export const LabeledText = styled.Text`
   font-family: ${Fonts.ThemeMedium};
-  font-size: ${moderateScale(16)}px;
+  font-size: ${(props: any) =>
+    props?.fontSize ? moderateScale(props?.fontSize) : moderateScale(16)}px;
   color: ${(props: any) => props?.color || Colors.blackShade2A30};
-  width: 45%;
+  margin-top: ${(props: any) => (props?.top ? verticalScale(props?.top) : verticalScale(5))}px;
+  margin-left: ${(props: any) => (props?.left ? scale(props?.left) : 0)}px;
+  margin-right: ${(props: any) => (props?.left ? scale(props?.left) : 0)}px;
+  margin-bottom: ${(props: any) => (props?.top ? verticalScale(props?.top) : verticalScale(5))}px;
 `
 
 const LabelView = styled.View`
   flex: 1;
-  margin-left: ${scale(10)}px;
-  margin-right: ${scale(10)}px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: ${verticalScale(15)}px;
-  margin-bottom: ${verticalScale(15)}px;
+  width: 85%;
+  align-self: center;
 `
 const PencilIcon = styled.Image`
-  width: ${verticalScale(25)}px;
-  height: ${verticalScale(25)}px;
   margin-left: ${scale(10)}px;
-  tint-color: ${Colors.black};
 `

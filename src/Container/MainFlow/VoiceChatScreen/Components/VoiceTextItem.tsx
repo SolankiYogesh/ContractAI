@@ -1,60 +1,59 @@
-import React from 'react'
-import {Image, StyleSheet, Text, View} from 'react-native'
+import React, {memo} from 'react'
+import {StyleSheet, Text, View} from 'react-native'
+import Animated, {FadeInDown} from 'react-native-reanimated'
 import {useSelector} from 'react-redux'
 
-import Triangle from '../../../../Components/Traingle'
+import AppProfileImage from '../../../../Components/AppProfileIcon'
 import {Colors} from '../../../../Theme'
 import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
 
-const VoiceTextItem = ({data}: any) => {
+const VoiceTextItem = ({data, isDisabled = false}: any) => {
   const user = useSelector((state: any) => state?.user?.userData)
   return (
-    <View style={styles.parentView}>
-      <Image
-        source={{
-          uri: user?.profile_image || 'https://i.ibb.co/5nRvPXV/User.png'
-        }}
+    <Animated.View
+      entering={isDisabled ? undefined : FadeInDown.delay(200)}
+      style={styles.parentView}
+    >
+      <AppProfileImage
         style={styles.profileImage}
-        resizeMode={'cover'}
+        borderWidth={0}
+        borderRadius={300}
+        url={user?.profile_image}
+        size={30}
       />
-      <Triangle styles={styles.triangleView} color={Colors.greyShadeDDD} size={verticalScale(10)} />
 
       <View style={styles.textContainer}>
         <Text style={styles.textStyle}>{data?.text}</Text>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 
-export default VoiceTextItem
+export default memo(VoiceTextItem)
 
 const styles = StyleSheet.create({
   textContainer: {
     backgroundColor: Colors.greyShadeDDD,
     padding: scale(10),
     borderTopLeftRadius: moderateScale(10),
-    borderBottomEndRadius: moderateScale(10),
-    borderBottomStartRadius: moderateScale(10)
+    borderBottomStartRadius: moderateScale(10),
+    borderTopRightRadius: moderateScale(10),
+    marginRight: scale(5)
   },
   profileImage: {
-    width: verticalScale(40),
-    height: verticalScale(40),
-    borderRadius: moderateScale(300),
     alignSelf: 'flex-end'
   },
   parentView: {
     alignSelf: 'flex-end',
-    marginRight: scale(20),
+    marginLeft: scale(20),
     maxWidth: '80%',
     minWidth: '20%',
-    justifyContent: 'flex-end'
+    marginVertical: verticalScale(5),
+    flexDirection: 'row-reverse',
+    alignItems: 'center'
   },
   textStyle: {
     fontSize: moderateScale(14),
     color: Colors.blackShade2A30
-  },
-  triangleView: {
-    marginRight: scale(15),
-    alignSelf: 'flex-end'
   }
 })

@@ -38,5 +38,9 @@ export default {
   purpleEEE: '#EEE9FA',
   greyOutColor: '#bdc3c7',
   black121928: '#121928',
-  backDrop: 'rgba(0, 0, 0, 0.5)'
+  backDrop: 'rgba(0, 0, 0, 0.5)',
+  greyShadeB1B5: '#B1B5B7',
+  greyShade263: 'rgba(38, 50, 56, 0.72)',
+  greyShadeFAF7: '#FAF7FA',
+  blackShareRGB: 'rgba(38, 50, 56, 0.72)'
 }

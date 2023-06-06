@@ -14,6 +14,7 @@ import {v4 as uuid} from 'uuid'
 
 import APICall from '../../../../APIRequest/APICall'
 import EndPoints from '../../../../APIRequest/EndPoints'
+import EmptyComponent from '../../../../Components/EmptyComponent'
 import English from '../../../../Resources/Locales/English'
 import {Colors, Images} from '../../../../Theme'
 import {CommonStyles} from '../../../../Theme/CommonStyles'
@@ -26,6 +27,7 @@ import {
   verticalScale,
   widthPx
 } from '../../../../Theme/Responsive'
+import Utility from '../../../../Theme/Utility'
 import VoiceDataItem from './VoiceDataItem'
 import VoiceTextItem from './VoiceTextItem'
 
@@ -43,7 +45,11 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
   const [data, setData] = useState<any[]>([])
   const AnimatedLineargradient = Animated.createAnimatedComponent(LinearGradient)
 
-  useEffect(() => {
+  const getTranscription = useCallback(async () => {
+    const isInternet = await Utility.isInternet()
+    if (!isInternet) {
+      return
+    }
     const ID = catche_id?.split('/')[1]
     if (ID) {
       const url = EndPoints.getChat.replace('ID', ID)
@@ -62,11 +68,14 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
         }
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [catche_id])
+
+  useEffect(() => {
+    getTranscription()
+  }, [getTranscription])
 
   const colors = useMemo(() => [Colors.purpleShad8A, Colors.purpleShadB0], [])
-  const transparencies = useMemo(() => [Colors.transparent, Colors.transparent], [])
+  const transparencies = useMemo(() => [Colors.white, Colors.white], [])
   Animated.addWhitelistedNativeProps({
     colors: true
   })
@@ -84,21 +93,35 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
     return {
       opacity: interpolate(animatedPosition.value, [1, 2], [1, 0])
     }
-  }, [animatedPosition])
+  }, [])
 
   const animatedTranslateStyle = useAnimatedStyle(() => {
-    if (animatedPosition.value < 1) {
-      return {}
-    } else {
+    if (!(animatedPosition.value <= 1)) {
       return {
         transform: [
           {
             translateX: -interpolate(animatedPosition.value, [2, 1], [halfWdith, 0])
+          },
+          {
+            rotate: `180deg`
+          }
+        ],
+        tintColor: interpolateColor(
+          animatedPosition.value,
+          [2, 1],
+          [Colors.ThemeColor, Colors.white]
+        )
+      }
+    } else {
+      return {
+        transform: [
+          {
+            rotate: `${interpolate(animatedPosition.value, [1, 0], [180, 0])}deg`
           }
         ]
       }
     }
-  }, [animatedPosition])
+  }, [animatedPosition.value])
 
   const onPressheader = useCallback(() => {
     bottomSheetRef.current?.snapToIndex(index ? 0 : 1)
@@ -106,39 +129,37 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
 
   const renderViewHandler = useCallback(() => {
     return (
-      <TouchableOpacity activeOpacity={9} onPress={onPressheader}>
+      <TouchableOpacity activeOpacity={0.9} onPress={onPressheader}>
         <AnimatedLineargradient
           start={{x: 0, y: 0}}
           end={{x: 1, y: 1}}
-          colors={animatedPosition.value !== 2 ? colors : transparencies}
           angle={91.48}
+          colors={transparencies}
           animatedProps={animatedProps}
           style={styles.headerStyle}
         >
           <Animated.Text style={[styles.headerText, animatedOpacityStyle]}>
             {English.R100}
           </Animated.Text>
-          <Animated.Image
-            source={!index ? Images.up : Images.down}
-            style={[styles.imageArrow, animatedTranslateStyle]}
-          />
+          <Animated.Image source={Images.up} style={[styles.imageArrow, animatedTranslateStyle]} />
         </AnimatedLineargradient>
       </TouchableOpacity>
     )
   }, [
     onPressheader,
     AnimatedLineargradient,
-    animatedPosition.value,
-    colors,
     transparencies,
     animatedProps,
     animatedOpacityStyle,
-    index,
     animatedTranslateStyle
   ])
 
   const renderItem = useCallback(({item}: any) => {
-    return item?.isMe ? <VoiceDataItem isDisabled data={item} /> : <VoiceTextItem data={item} />
+    return item?.isMe ? (
+      <VoiceDataItem isDisabled data={item} />
+    ) : (
+      <VoiceTextItem isDisabled data={item} />
+    )
   }, [])
 
   return (
@@ -166,6 +187,8 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
         initialNumToRender={2}
         windowSize={2}
         bounces={false}
+        ListEmptyComponent={() => <EmptyComponent />}
+        contentContainerStyle={data.length === 0 && CommonStyles.flex}
         showsVerticalScrollIndicator={false}
         data={data}
         style={[CommonStyles.flex, styles.flatlistStyle]}
@@ -195,7 +218,7 @@ const styles = StyleSheet.create({
   imageArrow: {
     width: verticalScale(15),
     height: verticalScale(15),
-    tintColor: Colors.ThemeBorder
+    tintColor: Colors.white
   },
   flatlistStyle: {
     width: '100%',

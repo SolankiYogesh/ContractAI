@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {memo, useCallback, useMemo} from 'react'
 import isEqual from 'react-fast-compare'
-import {StyleProp, View, ViewStyle} from 'react-native'
+import {Platform, StyleProp, View, ViewStyle} from 'react-native'
 import Animated, {useAnimatedProps, useDerivedValue} from 'react-native-reanimated'
 import {useSafeAreaFrame, useSafeAreaInsets} from 'react-native-safe-area-context'
 import Svg, {Path, PathProps} from 'react-native-svg'
@@ -31,7 +31,8 @@ const CurvedTabBarComponent = (props: TabBarViewProps) => {
     dotSize: SIZE_DOT,
     barHeight = TAB_BAR_HEIGHT,
     onPress = () => {},
-    children
+    children,
+    isTouchable
   } = props
   // state
   const {bottom} = useSafeAreaInsets()
@@ -62,6 +63,7 @@ const CurvedTabBarComponent = (props: TabBarViewProps) => {
           width={actualBarWidth}
           key={key}
           onPress={onPress}
+          isTouchable={isTouchable}
           indexAnimated={indexAnimated}
           countTab={routes.length}
           selectedIndex={selectedIndex}
@@ -70,7 +72,7 @@ const CurvedTabBarComponent = (props: TabBarViewProps) => {
         />
       )
     },
-    [indexAnimated, routes.length, selectedIndex, actualBarWidth, navigationIndex]
+    [indexAnimated, routes.length, isTouchable, selectedIndex, actualBarWidth, navigationIndex]
   )
 
   // reanimated
@@ -138,7 +140,7 @@ const CurvedTabBarComponent = (props: TabBarViewProps) => {
             zIndex: 1000,
             marginLeft: navigationIndex === 0 ? widthTab : scale(10),
             marginRight: navigationIndex === 2 ? widthTab : 0,
-            top: 0,
+            top: Platform.OS === 'ios' ? verticalScale(10) : verticalScale(5),
             height: verticalScale(40)
           }}
         >

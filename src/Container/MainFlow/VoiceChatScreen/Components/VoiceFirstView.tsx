@@ -18,6 +18,7 @@ interface VoiceFirstViewProps {
 
 const VoiceFirstView = ({viewIndex, onPressReset = () => {}}: VoiceFirstViewProps) => {
   const user = useSelector((state: any) => state?.user?.userData)
+
   return (
     <FirstContainer>
       <GettingText
@@ -28,12 +29,12 @@ const VoiceFirstView = ({viewIndex, onPressReset = () => {}}: VoiceFirstViewProp
       >
         {English.R179 + user?.first_name}
       </GettingText>
-      <CreateAnAccountText marginHorizontal={scale(20)}>
+      <CreateAnAccountText fontsize={moderateScale(16)} marginHorizontal={scale(20)}>
         {English.R98 + Utility.getTimeString()}
       </CreateAnAccountText>
-      <RippleAnimation isTop size={200} imageUrl={'https://i.ibb.co/Fxy24b5/ola.png'} />
-      <GettingText isCenter>{English.R97}</GettingText>
-      <CreateAnAccountText isCenter>
+      <RippleAnimation isReeva isTop size={200} />
+      {/* <GettingText isCenter>{English.R97}</GettingText> */}
+      <CreateAnAccountText marginHorizontal={scale(10)} isCenter>
         {viewIndex === 0 ? English.R121 : English.R122}
       </CreateAnAccountText>
       {viewIndex === 2 && (

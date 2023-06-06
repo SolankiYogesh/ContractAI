@@ -6,7 +6,6 @@ import styled from 'styled-components/native'
 
 import English from '../../../../Resources/Locales/English'
 import {Colors, Images} from '../../../../Theme'
-import {CommonStyles} from '../../../../Theme/CommonStyles'
 import {Fonts} from '../../../../Theme/Fonts'
 import {moderateScale, scale, verticalScale, widthPx} from '../../../../Theme/Responsive'
 
@@ -14,7 +13,7 @@ const OfferItem = ({item, index, selectedIndex, onPress = () => {}, isLoading = 
   return (
     <TouchableOpacity
       onPress={() => onPress(index)}
-      activeOpacity={0.5}
+      activeOpacity={1}
       disabled={isLoading}
       style={[styles.itmContainer, selectedIndex === index && !isLoading && styles.focus]}
     >
@@ -66,11 +65,11 @@ const OfferItem = ({item, index, selectedIndex, onPress = () => {}, isLoading = 
           <InnerView>
             <SellerImage source={Images.buyerSeller} />
             <Label>{English.R155}</Label>
-            <Label isBold>{item?.buyer}</Label>
+            <Label isBold>{item?.buyer || '        -'}</Label>
           </InnerView>
         )}
 
-        {isLoading ? (
+        {/* {isLoading ? (
           <Skeleton>
             <Skeleton.Item width={widthPx(30)} height={verticalScale(25)} borderRadius={4} />
           </Skeleton>
@@ -79,7 +78,7 @@ const OfferItem = ({item, index, selectedIndex, onPress = () => {}, isLoading = 
             <Label>{English.R157}</Label>
             <Label isBold>{item?.id}</Label>
           </InnerView>
-        )}
+        )} */}
       </RowView>
       {isLoading ? (
         <Skeleton>
@@ -91,13 +90,11 @@ const OfferItem = ({item, index, selectedIndex, onPress = () => {}, isLoading = 
           />
         </Skeleton>
       ) : (
-        item?.seller && (
-          <InnerView>
-            <SellerImage source={Images.buyerSeller} />
-            <Label>{English.R156}</Label>
-            <Label isBold>{item?.seller}</Label>
-          </InnerView>
-        )
+        <InnerView>
+          <SellerImage source={Images.buyerSeller} />
+          <Label>{English.R156}</Label>
+          <Label isBold>{item?.seller || '        -'}</Label>
+        </InnerView>
       )}
     </TouchableOpacity>
   )
@@ -107,12 +104,23 @@ export default OfferItem
 
 const styles = StyleSheet.create({
   itmContainer: {
-    ...CommonStyles.shadow,
+    // ...CommonStyles.shadow,
     borderRadius: moderateScale(15),
     marginVertical: verticalScale(10),
     padding: scale(10),
     width: widthPx(90),
-    alignSelf: 'center'
+    alignSelf: 'center',
+    backgroundColor: Colors.white,
+    shadowColor: Colors.greyShade9C9D,
+    shadowOffset: {
+      width: 0,
+      height: 16
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 42,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.transparent
   },
   gradient: {
     padding: scale(10),
@@ -149,12 +157,12 @@ const RowView = styled.View`
   align-items: center;
   flex: 1;
   justify-content: ${(props: any) => (props?.self ? 'flex-end' : 'space-between')};
-  padding-bottom: ${(props: any) => (props?.self ? verticalScale(5) : 0)};
-  margin-bottom: ${(props: any) => (props?.self ? verticalScale(10) : 0)};
+  padding-bottom: ${(props: any) => (props?.self ? verticalScale(5) : 0)}px;
+  margin-bottom: ${(props: any) => (props?.self ? verticalScale(10) : 0)}px;
 `
 
 const Label = styled.Text`
   color: ${(props: any) => props?.color ?? Colors.greyShade9797};
-  font-size: ${(props: any) => props?.fontSize ?? moderateScale(12)};
+  font-size: ${(props: any) => props?.fontSize ?? moderateScale(12)}px;
   font-family: ${(props: any) => (props?.isBold ? Fonts.ThemeBold : Fonts.ThemeMedium)};
 `

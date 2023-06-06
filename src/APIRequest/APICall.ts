@@ -23,12 +23,13 @@ let payloadPrevData: any = null
 axiosInstance.interceptors.request.use(
   (config: any) => {
     if (Constant?.token && typeof Constant?.token === 'string') {
-      config.headers = {Authorization: 'Bearer ' + Constant?.token || ' '}
+      config.headers = {Authorization: 'Bearer ' + Constant?.token || ' ', ...config?.headers}
     }
     return config
   },
   (error) => {
     console.log('axios request error =>', error)
+
     return Promise.reject(error)
   }
 )
@@ -39,7 +40,21 @@ axiosInstance.interceptors.response.use(
     return config
   },
   (error) => {
-    console.log('axios response error =>', error.response || error)
+    console.log('axios response error =>!', error.response || error)
+    if (error?.response?.data?.code === 'user_not_found') {
+      Constant.token = ''
+      Constant.refresh = ''
+      Utility.showAlert('User deleted')
+      emitter.emit(Constant.eventListenerKeys.logOut)
+      return
+    }
+    if (error?.response?.data?.code === 'user_inactive') {
+      Constant.token = ''
+      Constant.refresh = ''
+      Utility.showAlert('User inActive')
+      emitter.emit(Constant.eventListenerKeys.logOut)
+      return
+    }
     return Promise.reject(error)
   }
 )
@@ -77,23 +92,29 @@ const APICall = async (
 
   config.headers = getHeaders(formData)
   if (headers && typeof headers === 'string') {
-    config.headers = {Authorization: 'Bearer ' + headers || ' '}
+    config.headers = {Authorization: 'Bearer ' + headers || ' ', ...getHeaders(formData)}
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     axiosInstance(config)
       .then((res) => resolve({status: res.status, data: res.data}))
       .catch(async (error) => {
         if (error?.response?.status === 401) {
+          if (url === EndPoints.refresh) {
+            reject(error?.response)
+            return
+          }
           const tokenData: any = await getRefreshToken()
 
           if (payloadPrevData && tokenData?.token) {
             const {method, body, url} = payloadPrevData
-            const preResponse = await APICall(method, body, url, tokenData?.token, formData)
             emitter.emit(Constant.eventListenerKeys.updateToken, tokenData)
+            const preResponse = await APICall(method, body, url, tokenData?.token, formData)
             resolve(preResponse)
             payloadPrevData = null
           }
+        } else if (error?.response?.status === 500) {
+          reject(error?.response)
         } else {
           resolve(error?.response)
         }
@@ -109,7 +130,7 @@ const getRefreshToken = () => {
 
     APICall('post', payload, EndPoints.refresh)
       .then((resp: any) => {
-        if (resp?.status === 200 && resp?.data) {
+        if (resp?.status === 200 && resp?.data?.token && resp?.data?.refresh_token) {
           Constant.token = resp?.data?.token || ''
           Constant.refresh = resp?.data?.refresh_token || ''
           resolve(resp?.data || '')

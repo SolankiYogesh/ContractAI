@@ -17,10 +17,11 @@ export const GettingText = styled.Text`
 `
 export const CreateAnAccountText = styled.Text`
   font-family: ${Fonts.ThemeRegular};
-  font-size: ${moderateScale(14)}px;
+  font-size: ${(props: any) => props?.fontsize || moderateScale(14)}px;
   color: ${Colors.greyShade9797};
   text-align: ${(props: any) => (props.isCenter ? 'center' : 'left')};
-  margin-bottom: ${(props: any) => props?.marginBottom || 10}px;
+  margin-bottom: ${(props: any) =>
+    props?.marginBottom ? verticalScale(props?.marginBottom) : verticalScale(10)}px;
   margin-top: ${(props: any) => (props.isCenter ? verticalScale(25) : 0)}px;
   margin-bottom: ${(props: any) => (props.isCenter ? verticalScale(25) : verticalScale(5))}px;
   margin-left: ${(props: any) => props?.marginHorizontal || 0}px;
@@ -38,7 +39,7 @@ export const ScrollContainer = styled.View`
   margin-left: ${scale(20)}px;
   margin-right: ${scale(20)}px;
   flex: 1;
-  margin-top: ${(props: any) => props?.marginTop || 0};
+  margin-top: ${(props: any) => props?.marginTop || 0}px;
 `
 export const styles = StyleSheet.create({
   inputStyle: {
@@ -77,5 +78,10 @@ export const styles = StyleSheet.create({
   },
   fixedWidth: {
     width: widthPx(43)
+  },
+  marginBottom: {
+    marginBottom: verticalScale(80),
+    width: '90%',
+    alignSelf: 'center'
   }
 })

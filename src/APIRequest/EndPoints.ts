@@ -15,7 +15,12 @@ const EndPoints = {
   sendPrompt: '/reeva_api/v1/sendPrompt',
   getOffers: '/account_api/v1/getcontracts',
   getChat: '/account_api/v1/getchat/ID',
-  googleLogin: '/social_auth/v1/google/'
+  googleLogin: '/social_auth/v1/google/',
+  sendOffer: '/account_api/v1/sendcontract',
+  requestBrokerage: '/account_api/v1/request_brokerage',
+  appleLogin: '/social_auth/v1/apple/',
+  updateContact: '/account_api/v1/contact/ID/',
+  TNC: 'https://sandbox.reeva.expert/termsandcond'
 }
 
 export default EndPoints

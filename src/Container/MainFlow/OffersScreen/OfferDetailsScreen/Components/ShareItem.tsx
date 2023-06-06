@@ -5,7 +5,7 @@ import {useNavigation} from '@react-navigation/native'
 import BackButton from '../../../../../Components/BackButton'
 import {Colors, Images, Screens} from '../../../../../Theme'
 import {CommonStyles} from '../../../../../Theme/CommonStyles'
-import {moderateScale, scale, verticalScale} from '../../../../../Theme/Responsive'
+import {moderateScale, scale} from '../../../../../Theme/Responsive'
 import Utility from '../../../../../Theme/Utility'
 import {
   ContactContainer,
@@ -26,7 +26,7 @@ const ShareItem = ({item, offerItem}: any) => {
 
   return (
     <ContactContainer isShared disabled>
-      <TextToImage text={item?.value} />
+      <TextToImage fontSize={15} text={item?.value} />
       <View style={CommonStyles.flex}>
         <NameText>{item?.value}</NameText>
         <NumberText>{Utility.formateNumber(item?.number)}</NumberText>
@@ -47,8 +47,6 @@ export default ShareItem
 const styles = StyleSheet.create({
   btnStyle: {
     marginRight: scale(15),
-    width: verticalScale(60),
-    height: verticalScale(60),
     borderRadius: moderateScale(10)
   },
   imageStyle: {
