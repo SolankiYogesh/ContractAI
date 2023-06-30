@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {Alert, StyleSheet, TouchableOpacity, View} from 'react-native'
+import {StyleSheet, TouchableOpacity, View} from 'react-native'
 import Contacts from 'react-native-contacts'
 import {openSettings} from 'react-native-permissions'
 import BottomSheet, {BottomSheetBackdrop, BottomSheetSectionList} from '@gorhom/bottom-sheet'
@@ -9,6 +9,7 @@ import {v4 as uuid} from 'uuid'
 
 import APICall from '../../../../APIRequest/APICall'
 import EndPoints from '../../../../APIRequest/EndPoints'
+import AlertLoader from '../../../../Components/AlertLoader'
 import AppInput from '../../../../Components/AppInput'
 import CustomSectionList from '../../../../Components/CustomSectionList'
 import LoadingView from '../../../../Components/LoadingView'
@@ -35,6 +36,7 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
   const usersRef = useRef<any[]>([])
   const mapAlreadyUsers = useMemo(() => _.map(usersData, (i) => i?.number), [usersData])
   const [isLoading, setISLoading] = useState(true)
+  const isPressed = useRef(false)
 
   const getUserFromDevice = useCallback(() => {
     Contacts.getAllWithoutPhotos()
@@ -85,18 +87,16 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
       if (resp) {
         getUserFromDevice()
       } else {
-        Alert.alert(
-          'Reeva',
-          'Please allow permission to access contacts',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel'
-            },
-            {text: 'Change Permission', onPress: () => openSettings()}
-          ],
-          {userInterfaceStyle: 'light'}
-        )
+        AlertLoader.show(English.R205, [
+          {
+            title: English.R207,
+            style: 'cancel'
+          },
+          {
+            title: English.R206,
+            onPress: openSettings
+          }
+        ])
       }
     })
   }, [getUserFromDevice])
@@ -106,7 +106,12 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
     if (!isInternet) {
       return
     }
-    const payloadUsers = _.map(users, (i) => {
+    if (isPressed.current) {
+      return
+    }
+    isPressed.current = true
+
+    const payloadUsers = _.map(usersRef.current, (i) => {
       return {
         name: i?.name,
         number: i?.number,
@@ -118,20 +123,31 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
         isEdited: !!i?.isEdited
       }
     })
+
     const filterData = _.filter(payloadUsers, (i) => i?.isEdited)
+
     const uniqContacts = _.uniqBy(filterData, (i) => i?.number)
 
     if (uniqContacts.length > 0) {
-      APICall('post', uniqContacts, EndPoints.getContacts).then(() => {
-        Alert.alert(
-          'Reeva',
-          English.R188,
-          [{text: 'OK', onPress: () => bottomSheetRef.current?.close()}],
-          {userInterfaceStyle: 'light'}
-        )
-      })
+      APICall('post', uniqContacts, EndPoints.getContacts)
+        .then(() => {
+          isPressed.current = false
+          AlertLoader.show(English.R188, [
+            {
+              title: English.R210,
+              style: 'cancel',
+              onPress: () => bottomSheetRef.current?.close()
+            }
+          ])
+        })
+        .catch((e) => {
+          Utility.showAlert(String(e?.data?.message))
+          isPressed.current = false
+          bottomSheetRef.current?.close()
+        })
     } else {
       bottomSheetRef.current?.close()
+      isPressed.current = false
     }
   }, [mapAlreadyUsers, users])
 
@@ -174,40 +190,44 @@ const ContactSelectListSheet = (props: ContactSelectListSheetProps) => {
     )
   }, [search])
 
-  return (
-    <>
-      <BottomSheet
-        enablePanDownToClose
-        onClose={onClose}
-        backgroundStyle={styles.backgroundStyle}
-        ref={bottomSheetRef}
-        handleIndicatorStyle={styles.handleIndicatorStyle}
-        handleHeight={verticalScale(10)}
-        handleStyle={styles.handleStyle}
-        snapPoints={snapPoints}
-        style={styles.bottomSheetStyle}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior={'close'}
-            {...props}
-          />
-        )}
-      >
-        <View style={styles.headerStyle}>
-          <TouchableOpacity onPress={() => bottomSheetRef.current?.close()}>
-            <ForgotPasswordText fontSize={moderateScale(16)}>{English.R183}</ForgotPasswordText>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onPressSave}>
-            <ForgotPasswordText fontSize={moderateScale(16)}>{English.R182}</ForgotPasswordText>
-          </TouchableOpacity>
-        </View>
-        {renderSearchInput}
+  const renderTopView = useMemo(() => {
+    return (
+      <View style={styles.headerStyle}>
+        <TouchableOpacity onPress={() => bottomSheetRef.current?.close()}>
+          <ForgotPasswordText fontSize={moderateScale(16)}>{English.R183}</ForgotPasswordText>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onPressSave}>
+          <ForgotPasswordText fontSize={moderateScale(16)}>{English.R182}</ForgotPasswordText>
+        </TouchableOpacity>
+      </View>
+    )
+  }, [])
 
-        {isLoading ? <LoadingView /> : renderList}
-      </BottomSheet>
-    </>
+  return (
+    <BottomSheet
+      enablePanDownToClose
+      onClose={onClose}
+      backgroundStyle={styles.backgroundStyle}
+      ref={bottomSheetRef}
+      handleIndicatorStyle={styles.handleIndicatorStyle}
+      handleHeight={verticalScale(10)}
+      handleStyle={styles.handleStyle}
+      snapPoints={snapPoints}
+      style={styles.bottomSheetStyle}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          pressBehavior={'close'}
+          {...props}
+        />
+      )}
+    >
+      {renderTopView}
+      {renderSearchInput}
+
+      {isLoading ? <LoadingView /> : renderList}
+    </BottomSheet>
   )
 }
 

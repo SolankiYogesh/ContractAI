@@ -1,26 +1,36 @@
-import React, {forwardRef, useImperativeHandle, useState} from 'react'
+import React, {forwardRef, useImperativeHandle, useRef, useState} from 'react'
 import {ActivityIndicator, Dimensions, StyleSheet, View} from 'react-native'
 import ReactNativeModal from 'react-native-modal'
 
 import {Colors} from '../Theme'
 import {CommonStyles} from '../Theme/CommonStyles'
 import {moderateScale, verticalScale} from '../Theme/Responsive'
+import Loader from './Loader'
 
 const AppLoader = forwardRef((props, ref) => {
   const [isVisible, setISVisible] = useState(false)
+  const isCallBackRef = useRef(false)
   const {height} = Dimensions.get('screen')
 
   useImperativeHandle(ref, () => ({
-    showLoader(state: boolean) {
+    showLoader(state: boolean, isCallBack = false) {
       setISVisible(state)
+      isCallBackRef.current = isCallBack
     }
   }))
 
   return (
     <ReactNativeModal
       statusBarTranslucent
+      onModalHide={() => {
+        if (Loader?.onModalHideCallback && isCallBackRef.current) {
+          Loader?.onModalHideCallback()
+        }
+      }}
       isVisible={isVisible}
       deviceHeight={height}
+      animationInTiming={300}
+      animationOutTiming={300}
       style={[CommonStyles.modalStyle, CommonStyles.centerItem]}
     >
       <View style={styles.contianer}>

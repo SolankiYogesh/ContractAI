@@ -16,7 +16,7 @@ import APICall from '../../../../APIRequest/APICall'
 import EndPoints from '../../../../APIRequest/EndPoints'
 import EmptyComponent from '../../../../Components/EmptyComponent'
 import English from '../../../../Resources/Locales/English'
-import {Colors, Images} from '../../../../Theme'
+import {Colors, Constant, Images} from '../../../../Theme'
 import {CommonStyles} from '../../../../Theme/CommonStyles'
 import {Fonts} from '../../../../Theme/Fonts'
 import {
@@ -33,42 +33,48 @@ import VoiceTextItem from './VoiceTextItem'
 
 interface TransScriptBottomSheetProps {
   data?: any[]
-  catche_id?: string
+  contract?: any
 }
 
-const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) => {
+const TransScriptBottomSheet = ({contract = null}: TransScriptBottomSheetProps) => {
   const snapPoints = useMemo(() => [INPUT_HEIGHT, heightPx(50), heightPx(92)], [])
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [index, setIndex] = useState(0)
   const animatedPosition = useSharedValue(0)
   const halfWdith = widthPx(45)
   const [data, setData] = useState<any[]>([])
-  const AnimatedLineargradient = Animated.createAnimatedComponent(LinearGradient)
+  const AnimatedLineargradient = Constant.isAndroid
+    ? LinearGradient
+    : Animated.createAnimatedComponent(LinearGradient)
 
   const getTranscription = useCallback(async () => {
     const isInternet = await Utility.isInternet()
     if (!isInternet) {
       return
     }
-    const ID = catche_id?.split('/')[1]
-    if (ID) {
-      const url = EndPoints.getChat.replace('ID', ID)
 
-      APICall('get', {}, url).then((resp: any) => {
-        if (resp?.status === 200 && resp?.data) {
-          const mapData: any[] = _.map(resp?.data?.messages, (i) => {
-            return {
-              ...i,
-              isMe: i?.username === 'reeva',
-              text: i?.transcript,
-              id: uuid()
-            }
-          })
-          setData(mapData)
-        }
-      })
+    if (contract?.cache_id) {
+      const url = EndPoints.getChat.replace('ID', contract?.cache_id)
+
+      APICall('get', {}, url)
+        .then((resp: any) => {
+          if (resp?.status === 200 && resp?.data) {
+            const mapData: any[] = _.map(resp?.data?.messages, (i) => {
+              return {
+                ...i,
+                isMe: i?.username === 'reeva',
+                text: i?.transcript,
+                id: uuid()
+              }
+            })
+            setData(mapData)
+          }
+        })
+        .catch((e) => {
+          Utility.showAlert(String(e?.data?.message))
+        })
     }
-  }, [catche_id])
+  }, [contract])
 
   useEffect(() => {
     getTranscription()
@@ -87,13 +93,13 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
         interpolateColor(animatedPosition.value, [1, 2], [colors[1], transparencies[1]])
       ]
     }
-  }, [animatedPosition.value])
+  }, [animatedPosition.value, colors, transparencies])
 
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return {
       opacity: interpolate(animatedPosition.value, [1, 2], [1, 0])
     }
-  }, [])
+  }, [animatedPosition.value])
 
   const animatedTranslateStyle = useAnimatedStyle(() => {
     if (!(animatedPosition.value <= 1)) {
@@ -134,7 +140,7 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
           start={{x: 0, y: 0}}
           end={{x: 1, y: 1}}
           angle={91.48}
-          colors={transparencies}
+          colors={animatedPosition.value < 2 ? colors : transparencies}
           animatedProps={animatedProps}
           style={styles.headerStyle}
         >
@@ -148,6 +154,8 @@ const TransScriptBottomSheet = ({catche_id = ''}: TransScriptBottomSheetProps) =
   }, [
     onPressheader,
     AnimatedLineargradient,
+    animatedPosition.value,
+    colors,
     transparencies,
     animatedProps,
     animatedOpacityStyle,

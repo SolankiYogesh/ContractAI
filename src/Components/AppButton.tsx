@@ -17,6 +17,8 @@ interface AppButtonProps {
   leftImageStyle?: StyleProp<ImageStyle>
   isGradient?: boolean
   disabled?: boolean
+  disabledColors?: string[]
+  innerStyle?: StyleProp<ViewStyle>
 }
 
 const AppButton = (props: AppButtonProps) => {
@@ -28,7 +30,9 @@ const AppButton = (props: AppButtonProps) => {
     title = '',
     leftImage,
     isGradient = true,
-    disabled = false
+    disabled = false,
+    disabledColors = [],
+    innerStyle = {}
   } = props
   return (
     <ButtonContainer disabled={disabled} style={style} onPress={onPress}>
@@ -37,7 +41,9 @@ const AppButton = (props: AppButtonProps) => {
           isGradient && !disabled
             ? [Colors.purpleShad8A, Colors.purpleShadB0]
             : disabled
-            ? [Colors.greyOutColor, Colors.greyOutColor]
+            ? disabledColors.length > 0
+              ? disabledColors
+              : [Colors.greyOutColor, Colors.greyOutColor]
             : [Colors.transparent, Colors.transparent]
         }
         start={{x: 0, y: 0}}
@@ -45,7 +51,7 @@ const AppButton = (props: AppButtonProps) => {
         angle={91.48}
         style={[CommonStyles.flex, CommonStyles.centerItem]}
       >
-        <InnerView>
+        <InnerView style={innerStyle}>
           {!!leftImage && (
             <LeftImageContainer style={leftImageStyle} source={leftImage} resizeMode={'contain'} />
           )}

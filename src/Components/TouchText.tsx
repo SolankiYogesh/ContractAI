@@ -36,6 +36,7 @@ const TouchText = (props: TouchTextProps) => {
         fontFamily={fontFamily}
         fontSize={fontSize}
         color={color}
+        adjustsFontSizeToFit
         textAlign={textAlign}
         marginTop={marginTop}
         marginBottom={marginBottom}

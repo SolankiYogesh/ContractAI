@@ -1,12 +1,12 @@
 import React from 'react'
-import {FlatList, View} from 'react-native'
+import {FlatList, StyleSheet, View} from 'react-native'
 import styled from 'styled-components/native'
 
 import AppButton from '../../../../Components/AppButton'
 import English from '../../../../Resources/Locales/English'
-import {Images} from '../../../../Theme'
-import {verticalScale} from '../../../../Theme/Responsive'
-import {PlanTabProps, styles} from '../PremiumPlanScreen'
+import {Colors, Images} from '../../../../Theme'
+import {heightPx, verticalScale} from '../../../../Theme/Responsive'
+import {PlanTabProps} from '../PremiumPlanScreen'
 import PlanItem from './PlanItem'
 import {InnerContainer, InnetTextContainer, PlanTitle, TinyText} from './PlanTabBar'
 
@@ -25,10 +25,13 @@ const PlusPlan = ({onPress = () => {}, isCurrentPlan = false}: PlanTabProps) => 
           scrollEnabled={false}
           renderItem={({item}: any) => <PlanItem item={item} />}
         />
+
         <AppButton
+          disabled={isCurrentPlan}
           textStyle={isCurrentPlan ? styles.textStyle : {}}
           style={isCurrentPlan ? styles.buttonStyle : {}}
           onPress={onPress}
+          disabledColors={[Colors.white]}
           isGradient={!isCurrentPlan}
           title={isCurrentPlan ? English.R114 : English.R162}
         />
@@ -45,3 +48,19 @@ const BestValueImage = styled.Image`
   z-index: 1000;
   align-self: center;
 `
+const styles = StyleSheet.create({
+  tabContainer: {
+    alignItems: 'center',
+    marginTop: verticalScale(20),
+    height: heightPx(80),
+    width: '100%'
+  },
+  buttonStyle: {
+    borderWidth: 2,
+    borderColor: Colors.ThemeColor
+  },
+
+  textStyle: {
+    color: Colors.ThemeColor
+  }
+})

@@ -1,10 +1,11 @@
-import React, {memo, useCallback, useEffect} from 'react'
-import {Image, Platform, StyleSheet, Text, View} from 'react-native'
+import React, {memo, useCallback, useEffect, useMemo, useRef} from 'react'
+import {StyleSheet, Text, View} from 'react-native'
 import AnimatedTypeWriter from 'react-native-animated-typewriter'
 import Animated, {FadeInDown} from 'react-native-reanimated'
-import TrackPlayer, {Event, Track, useTrackPlayerEvents} from 'react-native-track-player'
-import _, {debounce} from 'lodash'
+import Sound from 'react-native-sound'
+import _ from 'lodash'
 
+import AppProfileIcon from '../../../../Components/AppProfileIcon'
 import {Colors, Images} from '../../../../Theme'
 import {moderateScale, scale, verticalScale} from '../../../../Theme/Responsive'
 import Utility from '../../../../Theme/Utility'
@@ -16,6 +17,7 @@ interface VoiceDataItemProps {
   loading?: boolean
   isDisabled?: boolean
   onAnimationEnd?: (state: boolean) => void
+  isSound?: boolean
 }
 
 const VoiceDataItem = ({
@@ -23,49 +25,70 @@ const VoiceDataItem = ({
   onPlayBackStateChange = () => {},
   loading,
   isDisabled = false,
-  onAnimationEnd = () => {}
+  onAnimationEnd = () => {},
+  isSound = false
 }: VoiceDataItemProps) => {
-  const events = [Event.PlaybackQueueEnded]
+  const isCalled = useRef(false)
 
-  const playeBack = useCallback(
-    (value: boolean) => {
-      onPlayBackStateChange(value)
+  const songCount = useRef(0)
+
+  const onPlayBackChange = useCallback(
+    async (state: boolean) => {
+      if (isCalled.current && !state) {
+        return
+      }
+      if (!state) {
+        isCalled.current = true
+      }
+
+      onPlayBackStateChange(state)
     },
     [onPlayBackStateChange]
   )
 
-  const debouncePlayerBack = debounce((value: boolean) => playeBack(value), 1000)
-
-  useTrackPlayerEvents(events, async (e) => {
-    if (e.type === Event.PlaybackQueueEnded && data?.voice_id && Platform.OS === 'android') {
-      TrackPlayer.reset()
-      debouncePlayerBack(false)
-    }
-  })
-
   const init = useCallback(async () => {
     const ids = String(data?.voice_id)?.split(',')
 
-    const tracks: Track[] = _.map(ids, (i) => {
+    const tracks = _.map(ids, (i) => {
       return {
-        url: Utility.getAudioFile(i), // Load media from the network
-        title: 'Reeva',
-        artist: 'Reeva',
-        album: 'Reeva',
-        genre: 'Reeva'
+        url: Utility.getAudioFile(i)
       }
     })
     const filterTracks = _.filter(tracks, (i) => !!i.url)
+    Sound.setCategory('Playback')
 
-    TrackPlayer.reset()
-    await TrackPlayer.add(filterTracks)
-    await TrackPlayer.play()
-    onAnimationEnd(true)
-    debouncePlayerBack(true)
-  }, [data?.voice_id, debouncePlayerBack, onAnimationEnd])
+    if (songCount.current < filterTracks.length) {
+      const sound = new Sound(filterTracks[songCount.current].url, (error) => {
+        if (error) {
+          onPlayBackChange(false)
+        } else {
+          sound.setVolume(1)
+
+          sound.play((success) => {
+            sound.release()
+            if (songCount.current === filterTracks?.length - 1) {
+              onPlayBackChange(false)
+            }
+            if (success) {
+              songCount.current += 1
+              init()
+            } else {
+              onPlayBackChange(false)
+            }
+          })
+        }
+      })
+      onAnimationEnd(true)
+      onPlayBackChange(true)
+    } else {
+      onPlayBackChange(false)
+    }
+  }, [data?.voice_id, onPlayBackChange, onAnimationEnd])
+
+  const isTypingEnd = useMemo(() => !data?.voice_id || !isSound, [data?.voice_id, isSound])
 
   useEffect(() => {
-    if (!isDisabled && data?.voice_id) {
+    if (!isDisabled && data?.voice_id && isSound) {
       init()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,9 +99,13 @@ const VoiceDataItem = ({
       entering={isDisabled ? undefined : FadeInDown.delay(200).springify()}
       style={styles.parentView}
     >
-      <Image source={Images.Reeva} style={styles.profileImage} resizeMode={'cover'} />
-
-      {/* <Triangle styles={styles.triangleView} color={Colors.lightPurple} size={verticalScale(10)} /> */}
+      <AppProfileIcon
+        isImageLocal
+        url={Images.Reeva}
+        size={30}
+        borderRadius={300}
+        borderWidth={0}
+      />
 
       <View style={styles.textContainer}>
         {isDisabled ? (
@@ -88,13 +115,13 @@ const VoiceDataItem = ({
             containerStyle={styles.container}
             textStyle={styles.animatedTextStyle}
             text={data?.text}
+            timeBetweenLetters={30}
             onTypingEnd={() => {
               onAnimationEnd(false)
-              if (!data?.voice_id || Platform.OS === 'ios') {
-                debouncePlayerBack(false)
+              if (isTypingEnd) {
+                onPlayBackChange(false)
               }
             }}
-            timeBetweenLetters={30}
           />
         ) : (
           <ReevaTyping />
@@ -126,11 +153,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: 'normal'
   },
-  profileImage: {
-    width: verticalScale(30),
-    height: verticalScale(30),
-    borderRadius: moderateScale(300)
-  },
+
   parentView: {
     maxWidth: '80%',
     alignSelf: 'flex-start',

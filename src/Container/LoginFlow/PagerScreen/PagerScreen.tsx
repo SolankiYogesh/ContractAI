@@ -10,7 +10,7 @@ import TouchText from '../../../Components/TouchText'
 import English from '../../../Resources/Locales/English'
 import {Colors, Images, Screens} from '../../../Theme'
 import {CommonStyles} from '../../../Theme/CommonStyles'
-import {moderateScale, scale, verticalScale, widthPx} from '../../../Theme/Responsive'
+import {heightPx, moderateScale, scale, verticalScale, widthPx} from '../../../Theme/Responsive'
 import PageItem from './Components/PageItem'
 
 const pageData = [
@@ -72,24 +72,26 @@ const PagerScreen = () => {
         )}
       </View>
 
-      <FlatList
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        horizontal
-        ref={listRef}
-        onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}], {
-          useNativeDriver: false,
-          listener: (event: any) => {
-            setActiveIndex(
-              Number(Number(event?.nativeEvent?.contentOffset?.x / widthPx(100)).toFixed())
-            )
-          }
-        })}
-        decelerationRate={'normal'}
-        scrollEventThrottle={16}
-        data={pageData}
-        renderItem={({item}) => <PageItem item={item} />}
-      />
+      <View style={styles.innnerView}>
+        <FlatList
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          horizontal
+          ref={listRef}
+          onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}], {
+            useNativeDriver: false,
+            listener: (event: any) => {
+              setActiveIndex(
+                Number(Number(event?.nativeEvent?.contentOffset?.x / widthPx(100)).toFixed())
+              )
+            }
+          })}
+          decelerationRate={'normal'}
+          scrollEventThrottle={16}
+          data={pageData}
+          renderItem={({item}) => <PageItem item={item} />}
+        />
+      </View>
       <ExpandingDot
         data={pageData}
         expandingDotWidth={30}
@@ -119,7 +121,8 @@ export const styles = StyleSheet.create({
     marginHorizontal: scale(5)
   },
   dotContainerStyle: {
-    position: 'relative'
+    position: 'relative',
+    marginVertical: 0
   },
   parentView: {
     right: scale(20),
@@ -127,5 +130,9 @@ export const styles = StyleSheet.create({
   },
   width: {
     marginBottom: verticalScale(60)
+  },
+  innnerView: {
+    minHeight: heightPx(65),
+    flex: 1
   }
 })

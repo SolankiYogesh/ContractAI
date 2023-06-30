@@ -1,15 +1,9 @@
 import React, {useCallback, useEffect, useState} from 'react'
-import {View} from 'react-native'
+import {Keyboard, View} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppAlertModal from '../../../Components/AppAlertModal'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
@@ -21,7 +15,13 @@ import Loader from '../../../Components/Loader'
 import TouchText from '../../../Components/TouchText'
 import English from '../../../Resources/Locales/English'
 import {Colors, Images, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {
+  CommonStyles,
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 
@@ -36,6 +36,7 @@ const ForgotPassScreen = () => {
     setISEnabled(!!Utility.isEmpty(email))
   }, [email])
   const onPressSendCode = useCallback(async () => {
+    Keyboard.dismiss()
     const isInternet = await Utility.isInternet()
     if (!isInternet) {
       return
@@ -63,10 +64,14 @@ const ForgotPassScreen = () => {
           Utility.showAlert(resp?.data?.message || English.R173)
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [navigation, email, setWrongEmailModal])
 
   const onPressLogin = useCallback(() => {
+    Keyboard.dismiss()
     navigation.navigate(Screens.LoginScreen)
   }, [navigation])
 

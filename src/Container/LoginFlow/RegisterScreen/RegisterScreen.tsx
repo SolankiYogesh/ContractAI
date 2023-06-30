@@ -1,22 +1,24 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {TextInput, View} from 'react-native'
 import {useNavigation, useRoute} from '@react-navigation/native'
 
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppInput from '../../../Components/AppInput'
 import AppLogo from '../../../Components/AppLogo'
 import AppScrollView from '../../../Components/AppScrollView'
+import TNCPrivacy from '../../../Components/TNCPrivacy'
+import TNCSheet from '../../../Components/TNCSheet'
 import TouchText from '../../../Components/TouchText'
 import English from '../../../Resources/Locales/English'
 import {Colors, Constant, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {
+  CommonStyles,
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 
@@ -24,6 +26,11 @@ const RegisterScreen = () => {
   const navigation: any = useNavigation()
   const route: any = useRoute().params
   const isGoogle = route?.isGoogle
+  const [isBottomSheet, setISBottomSheet] = useState({
+    isVisible: false,
+    isPrivacy: false
+  })
+  const isSocialLogin = route?.isSocialLogin
 
   const emailRef = useRef<TextInput>(null)
   const passwordRef = useRef<TextInput>(null)
@@ -47,6 +54,7 @@ const RegisterScreen = () => {
   const [errPhoneNumber, setErrPhoneNumber] = useState('')
   const [errConfirmPassword, setErrConfirmPassword] = useState('')
   const isApple = route?.isApple
+  const [check, setCheck] = useState(false)
 
   useEffect(() => {
     setISEnabled(
@@ -61,16 +69,19 @@ const RegisterScreen = () => {
     )
   }, [email, password, firstName, lastName, phoneNumber, confirmPassword, address, isGoogle])
 
-  const onChangeEmail = (text: string) => {
-    let errorMessage = ''
-    if (submitPressed) {
-      if (Utility.isValid(email)) {
-        errorMessage = English.R163
+  const onChangeEmail = useCallback(
+    (text: string) => {
+      let errorMessage = ''
+      if (submitPressed) {
+        if (Utility.isValid(text)) {
+          errorMessage = English.R163
+        }
       }
-    }
-    setEmail(text)
-    setErrEmail(errorMessage)
-  }
+      setEmail(text)
+      setErrEmail(errorMessage)
+    },
+    [submitPressed]
+  )
 
   const onChangePhoneNumber = useCallback(
     (text: string) => {
@@ -142,6 +153,10 @@ const RegisterScreen = () => {
       setErrConfirmPassword(English.R52)
       isValid = false
     }
+    if (!check) {
+      Utility.showAlert('Please agree to Terms & Conditions and Privacy Policy')
+      isValid = false
+    }
 
     if (isValid) {
       const payload: any = {
@@ -159,7 +174,8 @@ const RegisterScreen = () => {
         payload.password = password
       }
       navigation.navigate(Screens.BrokerRegisterScreen, {
-        ...payload
+        ...payload,
+        isSocialLogin
       })
     }
   }, [
@@ -168,13 +184,31 @@ const RegisterScreen = () => {
     isGoogle,
     password,
     confirmPassword,
+    check,
     firstName,
     lastName,
     licence,
     address,
     isApple,
-    navigation
+    navigation,
+    isSocialLogin
   ])
+
+  const renderSheet = useMemo(() => {
+    return (
+      isBottomSheet?.isVisible && (
+        <TNCSheet
+          isPrivacy={isBottomSheet?.isPrivacy}
+          onClose={() =>
+            setISBottomSheet({
+              isPrivacy: false,
+              isVisible: false
+            })
+          }
+        />
+      )
+    )
+  }, [isBottomSheet])
 
   return (
     <AppContainer>
@@ -287,7 +321,22 @@ const RegisterScreen = () => {
               />
             </>
           )}
-
+          <TNCPrivacy
+            onChangeValue={setCheck}
+            value={check}
+            onPressTNC={() =>
+              setISBottomSheet({
+                isPrivacy: false,
+                isVisible: true
+              })
+            }
+            onPressPrivacy={() =>
+              setISBottomSheet({
+                isPrivacy: true,
+                isVisible: true
+              })
+            }
+          />
           <AppButton
             disabled={!isEnabled}
             style={styles.inputStyle}
@@ -313,6 +362,7 @@ const RegisterScreen = () => {
           </View>
         </AppScrollView>
       </ScrollContainer>
+      {renderSheet}
     </AppContainer>
   )
 }

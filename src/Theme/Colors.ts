@@ -42,5 +42,9 @@ export default {
   greyShadeB1B5: '#B1B5B7',
   greyShade263: 'rgba(38, 50, 56, 0.72)',
   greyShadeFAF7: '#FAF7FA',
-  blackShareRGB: 'rgba(38, 50, 56, 0.72)'
+  blackShareRGB: 'rgba(38, 50, 56, 0.72)',
+  blueShade1A8: '#1A82FD',
+  purpleShad887e: '#887EF91A',
+  blueShade007: '#007AFF',
+  grayShadeF4: '#F4F4F4'
 }

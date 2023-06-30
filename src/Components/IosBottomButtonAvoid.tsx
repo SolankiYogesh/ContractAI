@@ -1,11 +1,13 @@
 import React from 'react'
-import {KeyboardAvoidingView, KeyboardAvoidingViewProps, Platform} from 'react-native'
+import {KeyboardAvoidingView, KeyboardAvoidingViewProps} from 'react-native'
+
+import {Constant} from '../Theme'
 
 const IosBottomButtonAvoid = (props: KeyboardAvoidingViewProps) => {
   const {keyboardVerticalOffset} = props
   return (
     <KeyboardAvoidingView
-      enabled={Platform.OS === 'ios'}
+      enabled={Constant.isIOS}
       behavior={'padding'}
       keyboardVerticalOffset={keyboardVerticalOffset}
     />

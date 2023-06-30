@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect} from 'react'
-import {Alert, Image, ScrollView, TouchableOpacity} from 'react-native'
+import {Image, ScrollView, TouchableOpacity} from 'react-native'
 import {useDispatch, useSelector} from 'react-redux'
 import {DrawerContentComponentProps, DrawerItem, useDrawerStatus} from '@react-navigation/drawer'
 import {CommonActions} from '@react-navigation/native'
@@ -11,6 +11,7 @@ import {Colors, Images, Screens} from '../Theme'
 import {Fonts} from '../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../Theme/Responsive'
 import Utility from '../Theme/Utility'
+import AlertLoader from './AlertLoader'
 import AppProfileIcon from './AppProfileIcon'
 
 interface DrawerScreenProps extends DrawerContentComponentProps {
@@ -40,37 +41,33 @@ const DrawerScreen = (props: DrawerScreenProps) => {
   )
 
   const onPressLogOut = useCallback(() => {
-    Alert.alert(
-      'Reeva',
-      'Are you sure you want to log out ?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'OK',
-          onPress: () => {
-            Utility.destroyVoice()
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 1,
-                routes: [
-                  {
-                    name: Screens.AuthKey,
-                    params: {
-                      isLogOut: true
-                    }
+    AlertLoader.show(English.R204, [
+      {
+        title: 'Cancel',
+        style: 'cancel'
+      },
+      {
+        title: 'OK',
+        style: 'default',
+        onPress: () => {
+          Utility.destroyVoice()
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [
+                {
+                  name: Screens.AuthKey,
+                  params: {
+                    isLogOut: true
                   }
-                ]
-              })
-            )
-            dispatch(logOut())
-          }
+                }
+              ]
+            })
+          )
+          dispatch(logOut())
         }
-      ],
-      {userInterfaceStyle: 'light'}
-    )
+      }
+    ])
   }, [dispatch, navigation])
 
   const onPressProfile = useCallback(() => {
@@ -82,23 +79,38 @@ const DrawerScreen = (props: DrawerScreenProps) => {
       <Container>
         <TouchableOpacity activeOpacity={1} onPress={onPressProfile}>
           <ImageBackContainer source={Images.draw_back}>
-            <AppProfileIcon
-              size={85}
-              style={{marginHorizontal: scale(10)}}
-              borderRadius={300}
-              url={user?.profile_image}
-            />
-            <TextView>
-              <TextUsername adjustsFontSizeToFit numberOfLines={1}>
-                {user?.first_name + ' ' + user?.last_name}
-              </TextUsername>
-              <TextEmail adjustsFontSizeToFit numberOfLines={1}>
-                {user?.email}
-              </TextEmail>
-            </TextView>
+            <IMGContainer>
+              <AppProfileIcon
+                size={85}
+                style={{marginHorizontal: scale(10)}}
+                borderRadius={300}
+                borderWidth={4}
+                borderColor={Colors.white}
+                url={user?.profile_image}
+              />
+              <TextView>
+                <TextUsername adjustsFontSizeToFit numberOfLines={1}>
+                  {user?.first_name + ' ' + user?.last_name}
+                </TextUsername>
+                <TextEmail adjustsFontSizeToFit numberOfLines={1}>
+                  {user?.email}
+                </TextEmail>
+              </TextView>
+            </IMGContainer>
+            {!!user?.total_counters?.total_contracts &&
+              !!user?.total_counters?.total_contract_time && (
+                <CountText>
+                  {English.R199}
+                  <CountText isBold>{user?.total_counters?.total_contract_time}</CountText>
+                  <CountText>{English.R200}</CountText>
+                  <CountText isBold>{user?.total_counters?.total_contracts}</CountText>
+
+                  <CountText>{English.R201}</CountText>
+                </CountText>
+              )}
           </ImageBackContainer>
         </TouchableOpacity>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView scrollEnabled={false} showsVerticalScrollIndicator={false}>
           <DrawerItem
             {...props}
             activeBackgroundColor={Colors.transparent}
@@ -226,9 +238,15 @@ export default DrawerScreen
 const ImageBackContainer = styled.ImageBackground`
   width: 100%;
   height: ${verticalScale(150)}px;
+`
+
+const IMGContainer = styled.View`
+  width: 100%;
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin-top: auto;
+  margin-bottom: auto;
 `
 
 const TextContainer = styled.Text`
@@ -239,6 +257,7 @@ const TextContainer = styled.Text`
 const TextView = styled.View`
   margin-left: ${scale(10)}px;
   flex: 1;
+  margin-right: ${scale(10)}px;
 `
 const TextUsername = styled.Text`
   font-family: ${Fonts.ThemeBold};
@@ -281,4 +300,15 @@ export const CloseImage = styled.Image`
   width: 40%;
   height: 40%;
   tint-color: white;
+`
+export const CountText = styled.Text`
+  font-size: ${moderateScale(13)}px;
+  color: ${(props: any) => props?.color || Colors.white};
+  margin-bottom: ${(props: any) => props?.marginBottom || 'auto'};
+  margin-top: ${(props: any) => props?.marginTop || 0}px;
+  align-self: center;
+  width: 90%;
+  line-height: 18px;
+  text-align: ${(props: any) => props?.textAlign || 'left'};
+  font-family: ${(props: any) => (props?.isBold ? Fonts.ThemeBold : Fonts.ThemeMedium)};
 `

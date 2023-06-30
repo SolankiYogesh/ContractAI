@@ -1,4 +1,6 @@
 import {StyleSheet} from 'react-native'
+import {Constant} from '../../../../../Theme'
+import {verticalScale} from '../../../../../Theme/Responsive'
 
 export const styles = StyleSheet.create({
   buttonTab: {
@@ -16,7 +18,8 @@ export const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 2
+    elevation: 2,
+    marginBottom: Constant.isAndroid ? verticalScale(5) : 0
   },
   title: {
     fontSize: 13.5,

@@ -5,12 +5,6 @@ import {CommonActions, useNavigation, useRoute} from '@react-navigation/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppInput from '../../../Components/AppInput'
@@ -20,6 +14,12 @@ import Loader from '../../../Components/Loader'
 import {setUserData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Constant, Screens} from '../../../Theme'
+import {
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import Utility from '../../../Theme/Utility'
 
 const BrokerRegisterScreen = () => {
@@ -39,8 +39,8 @@ const BrokerRegisterScreen = () => {
   const sNumberRef = useRef<TextInput>(null)
   const ptcRef = useRef<TextInput>(null)
   const ptcaRef = useRef<TextInput>(null)
-
   const userData: any = useRoute().params
+  const isSocialLogin = userData?.isSocialLogin
 
   useEffect(() => {
     setISEnabled(
@@ -125,17 +125,7 @@ const BrokerRegisterScreen = () => {
 
     Loader.isLoading(true)
 
-    APICall(
-      userData?.isGoogle ? 'put' : 'post',
-      payload,
-      userData?.isApple
-        ? EndPoints.appleLogin
-        : userData?.isGoogle
-        ? EndPoints.googleLogin
-        : EndPoints.register,
-      {},
-      false
-    )
+    APICall('post', payload, EndPoints.register, {}, false)
       .then((resp: any) => {
         Loader.isLoading(false)
 
@@ -151,7 +141,8 @@ const BrokerRegisterScreen = () => {
           }
           navigation.navigate(Screens.VerificationScreen, {
             isRegister: true,
-            email: userData?.email
+            email: userData?.email,
+            isSocialLogin
           })
         } else if (resp?.status === 200 && userData?.isGoogle) {
           onLoginSetup(resp)
@@ -159,7 +150,10 @@ const BrokerRegisterScreen = () => {
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [
     brokerName,
     brokerAddress,
@@ -173,11 +167,11 @@ const BrokerRegisterScreen = () => {
     userData?.address,
     userData?.userLicence,
     userData?.isGoogle,
-    userData?.isApple,
     userData?.password,
     PTC,
     PTCA,
     navigation,
+    isSocialLogin,
     onLoginSetup
   ])
 

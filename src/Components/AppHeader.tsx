@@ -7,6 +7,7 @@ import {Colors, Images} from '../Theme'
 import {Fonts} from '../Theme/Fonts'
 import {moderateScale, verticalScale} from '../Theme/Responsive'
 import BackButton from './BackButton'
+import PremiumCount from './PremiumCount'
 
 interface AppHeaderProps {
   title?: string
@@ -19,6 +20,7 @@ interface AppHeaderProps {
   style?: StyleProp<ViewStyle>
   colors?: string[]
   headerTextStyle?: StyleProp<TextStyle>
+  isPremiumCount?: any
 }
 
 const AppHeader = (props: AppHeaderProps) => {
@@ -32,7 +34,8 @@ const AppHeader = (props: AppHeaderProps) => {
     isBack = false,
     style = {},
     colors = undefined,
-    headerTextStyle = {}
+    headerTextStyle = {},
+    isPremiumCount = null
   } = props
   const navigation = useNavigation()
   const isBig = title.split(' ').length > 2
@@ -59,6 +62,9 @@ const AppHeader = (props: AppHeaderProps) => {
       <TitleText isBig={isBig} style={headerTextStyle}>
         {title}
       </TitleText>
+      {isPremiumCount && (
+        <PremiumCount current={isPremiumCount?.current} total={isPremiumCount?.total} />
+      )}
       {rightImage && <BackButton isHeader image={rightImage} onPress={onPressRight} />}
     </HeaderView>
   )

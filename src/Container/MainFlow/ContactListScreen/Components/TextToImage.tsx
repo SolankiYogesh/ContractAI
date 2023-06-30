@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {memo, useMemo} from 'react'
 import {StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import Skeleton from '@thevsstech/react-native-skeleton'
@@ -27,6 +27,20 @@ const TextToImage = (props: TextToImageProps) => {
     borderRadius: moderateScale(15)
   }
 
+  const renderBody = useMemo(() => {
+    return isLoading ? (
+      <View style={StyleSheet.absoluteFillObject}>
+        <Skeleton>
+          <Skeleton.Item width={verticalScale(50)} height={verticalScale(50)} borderRadius={4} />
+        </Skeleton>
+      </View>
+    ) : (
+      <InnerText adjustsFontSizeToFit numberOfLines={1} fontSize={fontSize}>
+        {Utility.convert(text)}
+      </InnerText>
+    )
+  }, [fontSize, isLoading, text])
+
   return (
     <LinearGradient
       colors={[Colors.purpleShade8A63, Colors.purpleShadeB090]}
@@ -35,19 +49,12 @@ const TextToImage = (props: TextToImageProps) => {
       angle={91.48}
       style={[containerStyle, style]}
     >
-      {isLoading && (
-        <View style={StyleSheet.absoluteFillObject}>
-          <Skeleton>
-            <Skeleton.Item width={verticalScale(50)} height={verticalScale(50)} borderRadius={4} />
-          </Skeleton>
-        </View>
-      )}
-      {!isLoading && <InnerText fontSize={fontSize}>{Utility.convert(text)}</InnerText>}
+      {renderBody}
     </LinearGradient>
   )
 }
 
-export default TextToImage
+export default memo(TextToImage)
 
 const InnerText = styled.Text`
   font-size: ${(props: any) =>

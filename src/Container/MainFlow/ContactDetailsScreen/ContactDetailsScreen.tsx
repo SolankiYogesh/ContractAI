@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react'
 import {Linking, StyleSheet} from 'react-native'
 import {useNavigation, useRoute} from '@react-navigation/native'
+import _ from 'lodash'
 import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
@@ -28,6 +29,7 @@ const ContactDetailsScreen = () => {
   const [isEnabled, setISEnabled] = useState(false)
   const isOfferScreen = params?.isOfferScreen
   const offerItem = params?.offerItem
+  const isTemplateScreen = params?.isTemplateScreen
 
   useEffect(() => {
     setISEnabled(!!Utility.isEmpty(email) && !!Utility.isEmpty(data?.number))
@@ -39,18 +41,12 @@ const ContactDetailsScreen = () => {
     }
   }, [data?.number])
 
-  const onPressEmail = useCallback(() => {
-    if (email) {
-      Linking.openURL(`mailto:${email}?subject=Subject&body=Body`)
-    }
-  }, [email])
-
   const onContactUpdate = useCallback(async () => {
     const isInternet = await Utility.isInternet()
     if (!isInternet) {
       return
     }
-    if (!data?.email && email) {
+    if (_.trim(email)) {
       const url = EndPoints.updateContact.replace('ID', data?.id)
       const payload = {
         email,
@@ -59,29 +55,29 @@ const ContactDetailsScreen = () => {
       }
       APICall('put', payload, url)
     }
-  }, [data?.email, data?.id, data?.name, data?.number, email])
+  }, [data?.id, data?.name, data?.number, email])
 
   const onChangeEmail = useCallback(
     (text: string) => {
       let errorMessage = ''
       if (submitPressed) {
-        if (Utility.isValid(email)) {
+        if (Utility.isValid(text)) {
           errorMessage = English.R163
         }
       }
       setEmail(text)
       setEmailError(errorMessage)
     },
-    [email, submitPressed]
+    [submitPressed]
   )
 
   const onPressSendOffer = useCallback(() => {
-    onContactUpdate()
     setSubmitPressed(true)
     if (Utility.isValid(email)) {
       setEmailError(English.R163)
       return
     }
+    onContactUpdate()
     if (isOfferScreen) {
       navigation.navigate(Screens.OfferDetailsScreen, {
         contactItem: {...(offerItem || {}), email},
@@ -93,22 +89,30 @@ const ContactDetailsScreen = () => {
       data: {...(data || {}), email}
     })
   }, [data, email, isOfferScreen, navigation, offerItem, onContactUpdate])
-  const onPressSendTemplate = useCallback(() => {
-    onContactUpdate()
 
+  const onPressSendTemplate = useCallback(() => {
     setSubmitPressed(true)
     if (Utility.isValid(email)) {
       setEmailError(English.R163)
       return
     }
+
+    onContactUpdate()
+    if (isTemplateScreen) {
+      navigation.navigate(Screens.OfferDetailsScreen, {
+        item: offerItem,
+        contactItem: {...(data || {}), email}
+      })
+      return
+    }
     navigation.push(Screens.EmailTemplateScreen, {
       contactItem: data
     })
-  }, [data, email, navigation, onContactUpdate])
+  }, [data, email, isTemplateScreen, navigation, offerItem, onContactUpdate])
 
   return (
     <AppContainer style={CommonStyles.flex}>
-      <AppHeader isBack title={English.R71} />
+      <AppHeader isBack />
       <AppScrollView scrollEnabled={false}>
         <TextToImage fontSize={50} style={styles.imageStyle} text={data?.value} />
         <UsernameText>{data?.value}</UsernameText>
@@ -125,33 +129,39 @@ const ContactDetailsScreen = () => {
 
         <AppInput
           ContainerStyle={styles.input}
-          editable={!data?.email}
           placeholder={English.R47}
           value={email}
+          keyboardType={'email-address'}
           error={emailError}
+          autoCapitalize={'none'}
+          autoCorrect={false}
+          spellCheck={false}
           errorStyle={styles.errorStyle}
           onChangeText={onChangeEmail}
           rightImage={Images.email_2}
-          onPress={onPressEmail}
         />
       </AppScrollView>
 
-      <AppButton
-        disabled={!isEnabled}
-        style={[styles.input, isOfferScreen && styles.marginBottom]}
-        onPress={onPressSendOffer}
-        title={English.R72}
-        leftImage={Images.send_email}
-        leftImageStyle={[styles.leftImageStyle, !isEnabled && styles.disabledLeftImageStyle]}
-      />
+      {!isTemplateScreen && (
+        <AppButton
+          disabled={!isEnabled}
+          style={[styles.input, isOfferScreen && styles.marginBottom]}
+          onPress={onPressSendOffer}
+          title={English.R72}
+          innerStyle={styles.innerStyle}
+          leftImage={Images.contract}
+          leftImageStyle={[styles.leftImageStyle, !isEnabled && styles.disabledLeftImageStyle]}
+        />
+      )}
 
       {!isOfferScreen && (
         <AppButton
           leftImage={Images.template}
-          textStyle={styles.textStyle}
-          style={styles.buttonStyle}
+          textStyle={[styles.textStyle]}
+          style={[styles.buttonStyle, isTemplateScreen && styles.marginBottom]}
           onPress={onPressSendTemplate}
           isGradient={false}
+          innerStyle={styles.innerStyle}
           title={English.R73}
         />
       )}
@@ -168,6 +178,11 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(300),
     alignSelf: 'center',
     marginTop: verticalScale(20)
+  },
+
+  innerStyle: {
+    width: '40%',
+    justifyContent: 'flex-start'
   },
   input: {
     width: '90%',
@@ -188,12 +203,10 @@ const styles = StyleSheet.create({
     marginHorizontal: scale(20)
   },
   marginBottom: {
-    marginBottom: verticalScale(20)
+    marginBottom: verticalScale(30)
   },
   leftImageStyle: {
-    tintColor: Colors.white,
-    width: verticalScale(25),
-    height: verticalScale(25)
+    tintColor: Colors.white
   },
   disabledLeftImageStyle: {
     tintColor: Colors.greyShade595

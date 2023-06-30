@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {Alert, RefreshControl, StyleSheet} from 'react-native'
+import {RefreshControl, StyleSheet} from 'react-native'
 import {openSettings} from 'react-native-permissions'
 import Animated, {FadeInUp, FadeOutDown} from 'react-native-reanimated'
 import {useIsFocused, useRoute} from '@react-navigation/native'
@@ -9,6 +9,7 @@ import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
+import AlertLoader from '../../../Components/AlertLoader'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import AppInput from '../../../Components/AppInput'
@@ -22,7 +23,6 @@ import {Fonts} from '../../../Theme/Fonts'
 import Permission from '../../../Theme/Permission'
 import {moderateScale, scale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
-import ShareItem from '../OffersScreen/OfferDetailsScreen/Components/ShareItem'
 import ContactItem from './Components/ContactItem'
 import ContactSelectListSheet from './Components/ContactSelectListSheet'
 
@@ -38,6 +38,7 @@ const ContactListScreen = () => {
   const templateItem = route?.item
   const [isSheet, setISSheet] = useState(false)
   const offerItem = route?.offerItem
+  const isFirst = useRef(false)
 
   const [isLoading, setISLoading] = useState(true)
 
@@ -70,20 +71,18 @@ const ContactListScreen = () => {
           allContactRef.current = filterNumbers
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
         setISLoading(false)
       })
   }, [])
 
   useEffect(() => {
     if (isFocus) {
-      getAllContactSync(false)
+      getAllContactSync(!isFirst.current)
+      isFirst.current = true
     }
   }, [isFocus])
-
-  useEffect(() => {
-    getAllContactSync()
-  }, [])
 
   const renderSearchInput = useMemo(() => {
     return (
@@ -107,11 +106,13 @@ const ContactListScreen = () => {
     ({item, index}: any) => {
       return (
         <Animated.View key={item?.id} entering={FadeInUp.delay(index * 10)} exiting={FadeOutDown}>
-          {isFromTemplate ? (
-            <ShareItem key={item?.id} offerItem={templateItem} item={item} />
-          ) : (
-            <ContactItem offerItem={offerItem} key={item?.id} isLoading={isLoading} item={item} />
-          )}
+          <ContactItem
+            isFromTemplate={isFromTemplate}
+            offerItem={isFromTemplate ? templateItem : offerItem}
+            key={item?.id}
+            isLoading={isLoading}
+            item={item}
+          />
         </Animated.View>
       )
     },
@@ -152,18 +153,13 @@ const ContactListScreen = () => {
     if (isContact) {
       setISSheet(true)
     } else {
-      Alert.alert(
-        'Reeva',
-        'Please allow permission to access contacts',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          },
-          {text: 'Change Permission', onPress: () => openSettings()}
-        ],
-        {userInterfaceStyle: 'light'}
-      )
+      AlertLoader.show(English.R205, [
+        {
+          title: English.R207,
+          style: 'cancel'
+        },
+        {title: English.R206, onPress: openSettings}
+      ])
     }
   }, [])
 

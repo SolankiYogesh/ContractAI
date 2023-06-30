@@ -32,8 +32,8 @@ const Container = styled.View`
   width: ${widthPx(100)}px;
   align-self: center;
   align-content: center;
-  height: 100%;
   margin-top: ${verticalScale(50)}px;
+  height: 100%;
 `
 
 const ImageContainer = styled.Image`

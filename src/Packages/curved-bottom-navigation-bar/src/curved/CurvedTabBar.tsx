@@ -14,6 +14,7 @@ import {HEIGHT_HOLE, TAB_BAR_HEIGHT} from './constant'
 import {ButtonTab} from './item/ButtonTabItem'
 import {Dot} from './item/Dot'
 import {styles} from './style'
+import {Constant} from '../../../../Theme'
 
 const AnimatedPath = Animated.createAnimatedComponent(Path)
 
@@ -140,7 +141,7 @@ const CurvedTabBarComponent = (props: TabBarViewProps) => {
             zIndex: 1000,
             marginLeft: navigationIndex === 0 ? widthTab : scale(10),
             marginRight: navigationIndex === 2 ? widthTab : 0,
-            top: Platform.OS === 'ios' ? verticalScale(10) : verticalScale(5),
+            top: Platform.OS === 'ios' ? verticalScale(10) : 0,
             height: verticalScale(40)
           }}
         >

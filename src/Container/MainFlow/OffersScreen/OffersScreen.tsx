@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
+import {useSelector} from 'react-redux'
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native'
 import _ from 'lodash'
 
@@ -10,7 +11,7 @@ import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import EmptyComponent from '../../../Components/EmptyComponent'
 import English from '../../../Resources/Locales/English'
-import {Colors, Images, Screens} from '../../../Theme'
+import {Colors, Constant, Images, Screens} from '../../../Theme'
 import {CommonStyles} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
@@ -48,7 +49,7 @@ const OffersScreen = () => {
   const route: any = useRoute()?.params
   const isFocus = useIsFocused()
   const isFirst = useRef(true)
-
+  const user = useSelector((state: any) => state?.user?.userData)
   const contactDetails = route?.data
   const isDrawer = route?.isDrawer
 
@@ -68,7 +69,8 @@ const OffersScreen = () => {
           setOffers(sortingData)
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
         setISLoading(false)
       })
   }, [])
@@ -111,6 +113,13 @@ const OffersScreen = () => {
       <AppHeader
         isMenu={isDrawer}
         isBack={!isDrawer}
+        isPremiumCount={
+          user?.plan_details &&
+          user?.plan_details?.plan_name === Constant.Plans.Free && {
+            current: user?.plan_details?.monthly_send_emails,
+            total: user?.plan_details?.send_offer_limit
+          }
+        }
         title={isDrawer ? English.R103 : English.R154}
       />
       <FlatList
@@ -134,7 +143,7 @@ const OffersScreen = () => {
           style={styles.input}
           onPress={() => onPressOffer(offers[selectedIndex])}
           title={English.R166}
-          leftImage={Images.send_email}
+          leftImage={Images.contract}
           leftImageStyle={styles.leftImageStyle}
         />
       )}
@@ -150,8 +159,6 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(20)
   },
   leftImageStyle: {
-    tintColor: Colors.white,
-    width: verticalScale(25),
-    height: verticalScale(25)
+    tintColor: Colors.white
   }
 })

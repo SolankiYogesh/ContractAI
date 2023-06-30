@@ -1,3 +1,5 @@
+import AppConfig from './AppConfig'
+
 const EndPoints = {
   register: '/auth_api/v1/register/',
   login: '/auth_api/v1/login/',
@@ -20,7 +22,11 @@ const EndPoints = {
   requestBrokerage: '/account_api/v1/request_brokerage',
   appleLogin: '/social_auth/v1/apple/',
   updateContact: '/account_api/v1/contact/ID/',
-  TNC: 'https://sandbox.reeva.expert/termsandcond'
+  TNC: AppConfig.API_URL + '/termsandcond',
+  SettlePayments: '/payments/v1/SettlePayments',
+  privacy: AppConfig.API_URL + '/privacypol',
+  playStore: 'https://play.google.com/store/apps/details?id=com.reeva',
+  appleStore: 'https://apps.apple.com/us/app/reeva/id1673635075'
 }
 
 export default EndPoints

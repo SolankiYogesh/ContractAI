@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect, useState} from 'react'
-import {Alert, StyleSheet, View} from 'react-native'
+import React, {useCallback, useEffect, useMemo, useState} from 'react'
+import {StyleSheet, View} from 'react-native'
 import ParallaxScrollView from 'react-native-parallax-scroll-view'
 import {useDispatch, useSelector} from 'react-redux'
 import {CommonActions, useNavigation} from '@react-navigation/native'
@@ -8,7 +8,7 @@ import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {GettingText} from '../../../CommonStyle/AuthContainer'
+import AlertLoader from '../../../Components/AlertLoader'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
@@ -17,7 +17,7 @@ import Loader from '../../../Components/Loader'
 import {logOut, setUserData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Colors, Images, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {CommonStyles, GettingText} from '../../../Theme/CommonStyles'
 import {Fonts} from '../../../Theme/Fonts'
 import {
   moderateScale,
@@ -51,7 +51,8 @@ const UserProfileScreen = () => {
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
         setISLoading(false)
       })
   }, [dispatch])
@@ -105,22 +106,23 @@ const UserProfileScreen = () => {
           onLogOut()
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [onLogOut])
 
   const onPressDelete = useCallback(() => {
-    Alert.alert(
-      'Warning',
-      'Are you sure that you want to delete your account?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {text: 'OK', onPress: () => onPressDeleteAccount()}
-      ],
-      {userInterfaceStyle: 'light'}
-    )
+    AlertLoader.show(English.R214, [
+      {
+        title: English.R207,
+        style: 'cancel'
+      },
+      {
+        title: English.R210,
+        onPress: onPressDeleteAccount
+      }
+    ])
   }, [onPressDeleteAccount])
 
   const renderNavBar = () => (
@@ -193,6 +195,19 @@ const UserProfileScreen = () => {
     [isLoading]
   )
 
+  const renderProfileImage = useMemo(() => {
+    return (
+      <AppProfileImage
+        borderRadius={30}
+        size={100}
+        style={styles.profileImage}
+        isLoading={isLoading}
+        borderWidth={0}
+        url={!isLoading && user?.profile_image}
+      />
+    )
+  }, [isLoading, user?.profile_image])
+
   return (
     <AppContainer
       statusbarColor={Colors.transparent}
@@ -216,14 +231,7 @@ const UserProfileScreen = () => {
         renderFixedHeader={renderNavBar}
         renderStickyHeader={() => <></>}
       >
-        <AppProfileImage
-          borderRadius={30}
-          size={100}
-          style={styles.profileImage}
-          isLoading={isLoading}
-          borderWidth={0}
-          url={user?.profile_image}
-        />
+        {renderProfileImage}
         <RoundView>
           <EditContainer disabled={isLoading} onPress={onPressEditProfile}>
             {isLoading ? (

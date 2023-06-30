@@ -1,12 +1,12 @@
-import React, {memo, useMemo} from 'react'
-import {Image} from 'react-native'
+import React, {memo} from 'react'
+import {StyleSheet} from 'react-native'
 import {useSelector} from 'react-redux'
-import {CachedImage} from '@georstat/react-native-image-cache'
 import Lottie from 'lottie-react-native'
 import styled from 'styled-components/native'
 
 import {Images} from '../Theme'
 import {moderateScale, verticalScale} from '../Theme/Responsive'
+import AppProfileIcon from './AppProfileIcon'
 
 interface RippleAnimationProps {
   isAnimating?: boolean
@@ -20,33 +20,26 @@ interface RippleAnimationProps {
 const RippleAnimation = (props: RippleAnimationProps) => {
   const {isAnimating = false, isTop = false, size, isReeva = false} = props
   const user = useSelector((state: any) => state?.user?.userData)
-  const ImageComponent = useMemo(() => (!isReeva ? CachedImage : Image), [isReeva])
-
-  const imageStyle: any = useMemo(() => {
-    return {
-      width: '80%',
-      height: '80%',
-      borderRadius: moderateScale(300),
-      zIndex: 1000
-    }
-  }, [])
 
   return (
     <Container size={size} isTop={isTop}>
-      <ImageComponent
-        style={imageStyle}
-        resizeMode={'cover'}
-        borderRadius={moderateScale(300)}
-        source={isReeva ? Images.Reeva : user?.profile_image}
+      <AppProfileIcon
+        isImageLocal={isReeva}
+        url={isReeva ? Images.Reeva : user?.profile_image}
+        size={size * 0.8}
+        borderRadius={1000}
+        borderWidth={0}
+        style={styles.imageStyle}
       />
       {isAnimating && (
         <Lottie
-          // eslint-disable-next-line react-native/no-inline-styles
-          style={{
-            width: size * 1.3,
-            height: size * 1.3,
-            position: 'absolute'
-          }}
+          style={[
+            styles.lottieStyle,
+            {
+              width: size * 1.3,
+              height: size * 1.3
+            }
+          ]}
           autoPlay
           source={Images.themeAnimation}
           loop
@@ -59,6 +52,15 @@ const RippleAnimation = (props: RippleAnimationProps) => {
 }
 export default memo(RippleAnimation)
 
+const styles = StyleSheet.create({
+  lottieStyle: {
+    position: 'absolute'
+  },
+  imageStyle: {
+    zIndex: 1000
+  }
+})
+
 const Container = styled.View`
   width: ${(props: any) => props?.size || 80}px;
   height: ${(props: any) => props?.size || 80}px;
@@ -67,4 +69,5 @@ const Container = styled.View`
   margin-bottom: ${(p: any) => (p?.isTop ? 0 : verticalScale(100))}px;
   align-self: center;
   overflow: hidden;
+  border-radius: ${moderateScale(300)}px;
 `

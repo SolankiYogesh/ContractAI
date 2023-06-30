@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react'
+import React, {useCallback, useMemo} from 'react'
 import {ImageSourcePropType, ImageStyle, StyleProp, TouchableOpacity, ViewStyle} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import {useNavigation} from '@react-navigation/native'
@@ -40,30 +40,24 @@ const BackButton = (props: BackButtonProps) => {
     navigation.goBack()
   }, [navigation, onPress])
 
-  const tint = {
-    tintColor: Colors.ThemeColor
-  }
+  const tint = useMemo(() => {
+    return {
+      tintColor: Colors.ThemeColor
+    }
+  }, [])
 
-  const containerStyle = {
-    width: verticalScale(45),
-    height: verticalScale(45),
-    ...CommonStyles.centerItem,
-    borderRadius: moderateScale(20),
-    marginBottom: isHeader ? 0 : verticalScale(30)
-  }
+  const containerStyle = useMemo(() => {
+    return {
+      width: verticalScale(45),
+      height: verticalScale(45),
+      ...CommonStyles.centerItem,
+      borderRadius: moderateScale(20),
+      marginBottom: isHeader ? 0 : verticalScale(30)
+    }
+  }, [isHeader])
 
   return (
-    <TouchableOpacity
-      hitSlop={{
-        bottom: 20,
-        left: 20,
-        right: 20,
-        top: 20
-      }}
-      style={parentStyle}
-      disabled={disabled}
-      onPress={onPressBack}
-    >
+    <TouchableOpacity style={parentStyle} disabled={disabled} onPress={onPressBack}>
       <LinearGradient
         colors={colors ?? [Colors.purpleShade8A63, Colors.purpleShadeB090]}
         start={{x: 0, y: 0}}

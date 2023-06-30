@@ -1,38 +1,40 @@
-import React, {useCallback, useEffect} from 'react'
+import React, {useEffect, useRef} from 'react'
 import {
   EmitterSubscription,
   LogBox,
-  Platform,
   TouchableOpacity,
   type TouchableOpacityProps
 } from 'react-native'
-import {Dirs} from 'react-native-file-access'
 import {GestureHandlerRootView} from 'react-native-gesture-handler'
-import {withIAPContext} from 'react-native-iap'
+import {finishTransaction, withIAPContext} from 'react-native-iap'
 import {
   flushFailedPurchasesCachedAsPendingAndroid,
   initConnection,
   type ProductPurchase,
-  type PurchaseError,
-  purchaseErrorListener,
   purchaseUpdatedListener,
   type SubscriptionPurchase
 } from 'react-native-iap'
 import systemSetting from 'react-native-system-setting'
-import TrackPlayer, {AppKilledPlaybackBehavior} from 'react-native-track-player'
 import {Provider} from 'react-redux'
-import {CacheManager} from '@georstat/react-native-image-cache'
 import crashlytics from '@react-native-firebase/crashlytics'
 import {GoogleSignin} from '@react-native-google-signin/google-signin'
+import _ from 'lodash'
 import {PersistGate} from 'redux-persist/integration/react'
 
+import APICall from './src/APIRequest/APICall'
+import EndPoints from './src/APIRequest/EndPoints'
+import AlertLoader from './src/Components/AlertLoader'
+import AlertModal, {AlertModalRef} from './src/Components/AlertModal'
 import AppLoader from './src/Components/AppLoader'
 import AppToast from './src/Components/AppToast'
 import Loader from './src/Components/Loader'
 import Toast from './src/Components/Toast'
 import {persistor, store} from './src/Redux/Store'
 import AppNavigation from './src/Router/AppNavigation'
+import {Constant} from './src/Theme'
 import {CommonStyles} from './src/Theme/CommonStyles'
+import {emitter} from './src/Theme/Constant'
+import Utility from './src/Theme/Utility'
 
 LogBox.ignoreAllLogs()
 
@@ -45,15 +47,7 @@ const defaultTouchableOpacityProps: TouchableOpacityProps = {
 TouchableOpacity.defaultProps = defaultTouchableOpacityProps
 
 const App = () => {
-  const setupTrackPlayer = useCallback(() => {
-    TrackPlayer.setupPlayer({}).then(() => {
-      TrackPlayer.updateOptions({
-        android: {
-          appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification
-        }
-      }).then(() => {})
-    })
-  }, [])
+  const isCalled = useRef(false)
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -62,20 +56,13 @@ const App = () => {
       offlineAccess: true,
       iosClientId: '1015544764254-utpbchgs7m4vhdi1sdtkp0lqubbqpt0n.apps.googleusercontent.com'
     })
-    setupTrackPlayer()
+
     crashlytics().log('App mounted.')
-    CacheManager.config = {
-      baseDir: `${Dirs.CacheDir}/images_cache/`,
-      blurRadius: 15,
-      cacheLimit: 0,
-      sourceAnimationDuration: 1000,
-      thumbnailAnimationDuration: 1000
-    }
 
     const volumeListener = systemSetting.addVolumeListener((volume) => {
       if ((volume.music && volume.music > 0) || (volume.system && volume.system > 0)) {
         try {
-          if (Platform.OS === 'android') {
+          if (Constant.isAndroid) {
             systemSetting.setVolume(0, {
               type: 'system'
             })
@@ -85,7 +72,7 @@ const App = () => {
     })
 
     try {
-      if (Platform.OS === 'android') {
+      if (Constant.isAndroid) {
         systemSetting.setVolume(0, {
           type: 'system'
         })
@@ -95,27 +82,50 @@ const App = () => {
       }
     } catch (error) {}
     let purchaseUpdateSubscription: EmitterSubscription
-    let purchaseErrorSubscription: EmitterSubscription
+
     initConnection().then(async () => {
       // we make sure that "ghost" pending payment are removed
       // (ghost = failed pending payment that are still marked as pending in Google's native Vending module cache)
-      if (Platform.OS === 'android') {
+      if (Constant.isAndroid) {
         await flushFailedPurchasesCachedAsPendingAndroid()
       }
       purchaseUpdateSubscription = purchaseUpdatedListener(
-        (purchase: SubscriptionPurchase | ProductPurchase) => {
+        async (purchase: SubscriptionPurchase | ProductPurchase) => {
+          console.log('purchase', purchase)
+
           if (purchase?.transactionReceipt) {
+            try {
+              await finishTransaction({
+                purchase
+              })
+            } catch (error) {}
+            if (isCalled.current) {
+              return
+            }
+
             const receipt = purchase?.transactionReceipt
-            if (receipt) {
-              // call api here
+
+            const product = _.find(Constant.productData, (i) => i.id === purchase.productId)
+            if (receipt && product) {
+              const payload = {
+                amount: product.amount,
+                token: receipt,
+                plan_name: product.product
+              }
+              APICall('post', payload, EndPoints.SettlePayments)
+                .then((resp: any) => {
+                  if (resp?.status === 200 && resp?.data?.success) {
+                    emitter.emit('onPurchase')
+                  }
+                })
+                .catch((e) => {
+                  isCalled.current = true
+                  Utility.showAlert(String(e?.data?.message))
+                })
             }
           }
         }
       )
-
-      purchaseErrorSubscription = purchaseErrorListener((error: PurchaseError) => {
-        console.log('purchaseErrorListener', error)
-      })
     })
 
     return () => {
@@ -125,11 +135,8 @@ const App = () => {
       if (purchaseUpdateSubscription) {
         purchaseUpdateSubscription?.remove()
       }
-      if (purchaseErrorSubscription) {
-        purchaseErrorSubscription.remove()
-      }
     }
-  }, [setupTrackPlayer])
+  }, [])
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor}>
@@ -137,6 +144,7 @@ const App = () => {
           <AppNavigation />
           <AppLoader ref={(ref: any) => Loader.setLoader(ref)} />
           <AppToast ref={(ref: any) => Toast.setLoader(ref)} />
+          <AlertModal ref={(ref: AlertModalRef) => AlertLoader.setLoader(ref)} />
         </GestureHandlerRootView>
       </PersistGate>
     </Provider>

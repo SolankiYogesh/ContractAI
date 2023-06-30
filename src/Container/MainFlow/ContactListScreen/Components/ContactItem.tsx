@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react'
+import React, {memo, useCallback, useMemo} from 'react'
 import {Image, Keyboard, StyleSheet, View} from 'react-native'
 import {useNavigation} from '@react-navigation/native'
 import Skeleton from '@thevsstech/react-native-skeleton'
@@ -12,7 +12,14 @@ import {moderateScale, scale, verticalScale, widthPx} from '../../../../Theme/Re
 import Utility from '../../../../Theme/Utility'
 import TextToImage from './TextToImage'
 
-const ContactItem = ({item, isLoading = false, isSelectList = false, onPress, offerItem}: any) => {
+const ContactItem = ({
+  item,
+  isLoading = false,
+  isFromTemplate = false,
+  isSelectList = false,
+  onPress,
+  offerItem
+}: any) => {
   const navigation: any = useNavigation()
 
   const onPressContact = useCallback(() => {
@@ -43,9 +50,28 @@ const ContactItem = ({item, isLoading = false, isSelectList = false, onPress, of
     }
   }, [item, navigation, offerItem, onPress])
 
-  return (
-    <ContactContainer onPress={onPressContact} isShared>
-      <TextToImage fontSize={15} isLoading={isLoading} text={item?.value} />
+  const onPressShare = useCallback(() => {
+    Keyboard.dismiss()
+    if (!item?.email) {
+      navigation.navigate(Screens.ContactDetailsScreen, {
+        data: item,
+        offerItem,
+        isTemplateScreen: true
+      })
+    } else {
+      navigation.navigate(Screens.OfferDetailsScreen, {
+        item: offerItem,
+        contactItem: item
+      })
+    }
+  }, [offerItem, item, navigation])
+
+  const renderImageText = useMemo(() => {
+    return <TextToImage fontSize={15} isLoading={isLoading} text={item?.value} />
+  }, [item?.value, isLoading])
+
+  const renderNumberView = useMemo(() => {
+    return (
       <View style={CommonStyles.flex}>
         {isLoading ? (
           <Skeleton>
@@ -64,36 +90,56 @@ const ContactItem = ({item, isLoading = false, isSelectList = false, onPress, of
           </>
         )}
       </View>
-      {isSelectList ? (
-        <CheckBox isSelected={item?.isSelected}>
-          <Image source={Images.right} style={styles.checkImageStyle} />
-        </CheckBox>
-      ) : isLoading ? (
-        <Skeleton>
-          <Skeleton.Item width={verticalScale(30)} height={verticalScale(30)} borderRadius={4} />
-        </Skeleton>
-      ) : (
-        <BackButton
-          isHeader
-          imageStyle={styles.imageStyle}
-          style={styles.btnStyle}
-          disabled
-          image={Images.rightTriangle}
-        />
-      )}
+    )
+  }, [isLoading, item?.number, item?.value])
+
+  const renderButton = useMemo(() => {
+    return isSelectList ? (
+      <CheckBox isSelected={item?.isSelected}>
+        <Image source={Images.right} style={styles.checkImageStyle} />
+      </CheckBox>
+    ) : isLoading ? (
+      <Skeleton>
+        <Skeleton.Item width={verticalScale(30)} height={verticalScale(30)} borderRadius={4} />
+      </Skeleton>
+    ) : isFromTemplate ? (
+      <BackButton
+        isHeader
+        colors={[Colors.white, Colors.white]}
+        imageStyle={styles.imageStyle2}
+        style={styles.btnStyle2}
+        onPress={onPressShare}
+        image={Images.send}
+      />
+    ) : (
+      <BackButton
+        isHeader
+        imageStyle={styles.imageStyle}
+        style={styles.btnStyle}
+        disabled
+        image={Images.rightTriangle}
+      />
+    )
+  }, [isFromTemplate, isLoading, isSelectList, item?.isSelected, onPressShare])
+
+  return (
+    <ContactContainer onPress={() => (!isFromTemplate ? onPressContact() : onPressShare())}>
+      {renderImageText}
+      {renderNumberView}
+      {renderButton}
     </ContactContainer>
   )
 }
 
-export default ContactItem
+export default memo(ContactItem)
 
 export const ContactContainer = styled.TouchableOpacity`
   align-items: center;
   flex-direction: row;
   margin-top: 10px;
   margin-bottom: 10px;
-  margin-right: ${(props: any) => (props?.isShared ? verticalScale(20) : 0)}px;
-  margin-left: ${(props: any) => (props?.isShared ? verticalScale(20) : 0)}px;
+  margin-right: ${verticalScale(20)}px;
+  margin-left: ${verticalScale(20)}px;
 `
 
 export const ImageContainer = styled.Image`
@@ -129,7 +175,6 @@ const CheckBox = styled.View`
 
 const styles = StyleSheet.create({
   btnStyle: {
-    // marginRight: scale(15),
     width: verticalScale(30),
     height: verticalScale(30),
     borderRadius: moderateScale(10)
@@ -141,5 +186,12 @@ const styles = StyleSheet.create({
     height: '70%',
     width: '70%',
     tintColor: Colors.white
+  },
+  btnStyle2: {
+    marginRight: scale(15),
+    borderRadius: moderateScale(10)
+  },
+  imageStyle2: {
+    tintColor: Colors.ThemeColor
   }
 })

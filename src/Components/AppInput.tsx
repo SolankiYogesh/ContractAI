@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {forwardRef, useCallback, useEffect, useRef, useState} from 'react'
+import React, {forwardRef, useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {
   Image,
   ImageSourcePropType,
@@ -23,7 +23,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import styled from 'styled-components/native'
 
-import {Images} from '../Theme'
+import {Constant, Images} from '../Theme'
 import Colors from '../Theme/Colors'
 import {Fonts} from '../Theme/Fonts'
 import {heightPx, INPUT_HEIGHT, moderateScale, scale, verticalScale} from '../Theme/Responsive'
@@ -69,6 +69,10 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
   const [isFocus, setISFocus] = useState(false)
   const translateY = useSharedValue(0)
   const textInputRef = useRef<TextInput>(null)
+  const ConstantPosition = useMemo(
+    () => (Constant.isAndroid ? -verticalScale(40) / 2 : -INPUT_HEIGHT / 2),
+    []
+  )
 
   useEffect(() => {
     if (props.isPassword) {
@@ -79,7 +83,7 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
   useEffect(() => {
     if (isAnimated) {
       if (value || isFocus) {
-        translateY.value = withTiming(-INPUT_HEIGHT / 2)
+        translateY.value = withTiming(ConstantPosition)
       } else {
         translateY.value = withTiming(0)
       }
@@ -90,12 +94,12 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
     return {
       color: interpolateColor(
         translateY.value,
-        [0, -INPUT_HEIGHT / 2],
+        [0, ConstantPosition],
         [Colors.PlaceHolderColor, isFocus ? Colors.ThemeColor : Colors.PlaceHolderColor]
       ),
-      fontSize: interpolate(translateY.value, [0, -INPUT_HEIGHT / 2], [15, 11])
+      fontSize: interpolate(translateY.value, [0, ConstantPosition], [15, 11])
     }
-  }, [])
+  }, [translateY.value, ConstantPosition])
 
   const animatedTouchableOpacityStyle = useAnimatedStyle(() => {
     return {
@@ -105,7 +109,7 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
         }
       ]
     }
-  }, [])
+  }, [translateY.value, ConstantPosition])
 
   const setRefs = useCallback(
     (node: TextInput | null) => {
@@ -119,7 +123,7 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
 
   return (
     <TouchableOpacity style={styles.parentStyle} disabled={!onPress} onPress={onPress}>
-      {isAnimated && (
+      {isAnimated && Constant.isIOS && (
         <AnimatedTouchableOpacity
           onPress={() => {
             if (textInputRef.current) {
@@ -149,6 +153,20 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
           ContainerStyle
         ]}
       >
+        {isAnimated && Constant.isAndroid && (
+          <AnimatedTouchableOpacity
+            onPress={() => {
+              if (textInputRef.current) {
+                textInputRef.current?.focus()
+              }
+            }}
+            style={[styles.animateButton, animatedTouchableOpacityStyle]}
+          >
+            <Animated.Text style={[styles.placeHolderStyle, animatedPlaceHolderStyle]}>
+              {placeholder}
+            </Animated.Text>
+          </AnimatedTouchableOpacity>
+        )}
         <TextInput
           onChangeText={onChangeText}
           value={value}
@@ -156,11 +174,15 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
           onFocus={() => setISFocus(true)}
           onBlur={() => setISFocus(false)}
           editable={editable}
-          isMultiline
           multiline={isMultiline}
           placeholderTextColor={Colors.PlaceHolderColor}
           selectionColor={Colors.ThemeColor}
-          style={[styles.input, inputStyle, isMultiline && styles.multiStyle]}
+          style={[
+            styles.input,
+            inputStyle,
+            isMultiline && styles.multiStyle,
+            isAnimated && Constant.isAndroid && styles.animatedInput
+          ]}
           {...{...props, placeholder: isAnimated ? '' : placeholder}}
           secureTextEntry={isPassword}
         />
@@ -171,7 +193,10 @@ const AppInput = forwardRef<TextInput, AppInputProps>((props: AppInputProps, ref
           </View>
         )}
         {props?.isPassword && isEye && (
-          <EyeContainer onPress={() => setIsPassword(!isPassword)}>
+          <EyeContainer
+            style={(isAnimated && Constant.isAndroid && styles.animatedeye) || {}}
+            onPress={() => setIsPassword(!isPassword)}
+          >
             <EyeImage
               style={tint}
               tintColor={Colors.greyShadeA0}
@@ -196,7 +221,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(10),
     flexDirection: 'row',
     alignItems: 'center',
-    padding: scale(10)
+    padding: scale(10),
+    zIndex: 0
   },
   parentStyle: {
     marginVertical: verticalScale(10),
@@ -204,7 +230,8 @@ const styles = StyleSheet.create({
   },
   activeContainer: {
     borderColor: Colors.ThemeColor,
-    backgroundColor: Colors.white
+    backgroundColor: Colors.white,
+    zIndex: 0
   },
   imageCointainer: {
     width: verticalScale(25),
@@ -222,25 +249,38 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.ThemeRegular,
     flex: 1,
     height: INPUT_HEIGHT,
-    zIndex: 20000
+    zIndex: 0
+  },
+  animatedInput: {
+    position: 'absolute',
+    left: scale(10),
+    flex: 1,
+    width: '100%'
   },
   multiStyle: {
     height: heightPx(40),
     textAlignVertical: 'top',
-    paddingTop: verticalScale(15)
+    paddingTop: verticalScale(15),
+    zIndex: 0
   },
   placeHolderStyle: {
     color: Colors.PlaceHolderColor,
     fontSize: moderateScale(15),
     fontFamily: Fonts.ThemeRegular,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    zIndex: 1000
   },
   animateButton: {
-    position: 'absolute',
-    zIndex: 1,
+    zIndex: 1000,
     backgroundColor: Colors.greyShadeF7F,
     padding: scale(2),
-    marginLeft: scale(10)
+    marginLeft: scale(10),
+    alignSelf: 'flex-start',
+    position: Constant.isAndroid ? 'relative' : 'absolute'
+  },
+  animatedeye: {
+    position: 'absolute',
+    right: scale(10)
   }
 })
 

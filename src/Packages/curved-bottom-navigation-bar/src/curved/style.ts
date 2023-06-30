@@ -1,4 +1,6 @@
 import {StyleSheet} from 'react-native'
+import {Constant} from '../../../../Theme'
+import {verticalScale} from '../../../../Theme/Responsive'
 
 export const styles = StyleSheet.create({
   container: {
@@ -11,7 +13,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 2.5,
     alignSelf: 'center',
-    overflow: 'visible'
+    overflow: 'visible',
+    marginBottom: Constant.isAndroid ? verticalScale(5) : 0
   },
   svg: {
     top: 0,

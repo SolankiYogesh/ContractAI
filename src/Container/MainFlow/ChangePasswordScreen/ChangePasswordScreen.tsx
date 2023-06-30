@@ -5,7 +5,6 @@ import {CommonActions, useNavigation} from '@react-navigation/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {ScrollContainer, styles} from '../../../CommonStyle/AuthContainer'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
@@ -16,6 +15,7 @@ import Loader from '../../../Components/Loader'
 import {logOut} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Screens} from '../../../Theme'
+import {ScrollContainer, styles} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 
@@ -81,7 +81,10 @@ const ChangePasswordScreen = () => {
           onPressLogOut()
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [password, confirmPassword, oldPassword, onPressLogOut])
 
   const onChangeTextPassword = useCallback((text: string) => {

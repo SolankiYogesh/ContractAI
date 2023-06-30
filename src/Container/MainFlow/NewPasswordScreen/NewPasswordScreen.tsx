@@ -4,12 +4,6 @@ import {useNavigation, useRoute} from '@react-navigation/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppAlertModal from '../../../Components/AppAlertModal'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
@@ -20,6 +14,12 @@ import ErrorText from '../../../Components/ErrorText'
 import Loader from '../../../Components/Loader'
 import English from '../../../Resources/Locales/English'
 import {Images, Screens} from '../../../Theme'
+import {
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import Utility from '../../../Theme/Utility'
 
 const NewPasswordScreen = () => {
@@ -68,7 +68,10 @@ const NewPasswordScreen = () => {
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [password, confirmPassword, email, tokenData])
 
   const renderChangePasswordView = useMemo(() => {

@@ -66,7 +66,8 @@ const DrawerNavigation = () => {
       <Drawer.Screen
         name={Screens.PremiumPlanScreen}
         initialParams={{
-          isDrawer: true
+          isDrawer: true,
+          initialIndex: null
         }}
         component={PremiumPlanScreen}
       />

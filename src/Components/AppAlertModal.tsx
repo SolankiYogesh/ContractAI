@@ -1,10 +1,10 @@
 import React from 'react'
-import {ImageSourcePropType, StyleSheet} from 'react-native'
+import {Dimensions, ImageSourcePropType, StyleSheet} from 'react-native'
 import ReactNativeModal from 'react-native-modal'
 import styled from 'styled-components/native'
 
-import {GettingText} from '../CommonStyle/AuthContainer'
 import {Colors, Images} from '../Theme'
+import {GettingText} from '../Theme/CommonStyles'
 import {Fonts} from '../Theme/Fonts'
 import {moderateScale, scale, verticalScale} from '../Theme/Responsive'
 import AppButton from './AppButton'
@@ -29,9 +29,10 @@ const AppAlertModal = (props: AppAlertModalProps) => {
     image,
     isVisible = false
   } = props
+  const {height} = Dimensions.get('screen')
 
   return (
-    <ReactNativeModal isVisible={isVisible}>
+    <ReactNativeModal deviceHeight={height} statusBarTranslucent isVisible={isVisible}>
       <Container>
         <BackButton
           onPress={onClose}

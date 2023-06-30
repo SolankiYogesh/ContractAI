@@ -1,11 +1,9 @@
-import React, {useMemo} from 'react'
-import {Image, ImageStyle, StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
-import {ResizeMode} from 'react-native-fast-image'
-import {CachedImage} from '@georstat/react-native-image-cache'
-import _ from 'lodash'
+import React, {memo, useState} from 'react'
+import {ImageStyle, StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
+import FastImage, {ResizeMode} from 'react-native-fast-image'
 
-import {Images} from '../Theme'
 import {CommonStyles} from '../Theme/CommonStyles'
+import LoadingView from './LoadingView'
 
 export interface AppLoadingImageProps {
   url?: string
@@ -14,30 +12,30 @@ export interface AppLoadingImageProps {
   isLoadingView?: boolean
   resizeMode?: ResizeMode
   borderRadius?: number
+  isImageLocal?: boolean
 }
 
 const AppLoadingImage = (props: AppLoadingImageProps) => {
-  const {imageStyle = {}, style = {}, url, resizeMode} = props
-
-  const isHttp = useMemo(() => url?.includes('http'), [url])
-  const ImageComponent = useMemo(
-    () => (!_.isEmpty(url) && isHttp ? CachedImage : Image),
-    [isHttp, url]
-  )
+  const {imageStyle = {}, style = {}, url, resizeMode, isImageLocal = false} = props
+  const [loading, setLoading] = useState(false)
 
   return (
     <View style={[styles.container, style]}>
-      <ImageComponent
-        thumbnailSource={'https://cdn.pixabay.com/photo/2016/07/11/15/43/woman-1509956_1280.jpg'}
+      <FastImage
         resizeMode={resizeMode || 'cover'}
-        source={(!_.isEmpty(url) && !isHttp ? {uri: url} : url) || Images.profile}
+        source={isImageLocal ? url : {uri: url}}
+        onLoadStart={() => setLoading(true)}
+        onLoadEnd={() => setLoading(false)}
+        onLoad={() => setLoading(false)}
+        onError={() => setLoading(false)}
         style={[styles.image, imageStyle]}
       />
+      {loading && <LoadingView style={StyleSheet.absoluteFill} />}
     </View>
   )
 }
 
-export default AppLoadingImage
+export default memo(AppLoadingImage)
 
 AppLoadingImage.defaultProps = {
   url: '',

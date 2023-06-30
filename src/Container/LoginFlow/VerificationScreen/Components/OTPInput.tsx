@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {TextInput} from 'react-native'
 
 import {
@@ -15,45 +15,57 @@ const OTPInput = ({code, setCode, maximumLength, setIsPinReady}: any) => {
 
   const [isInputBoxFocused, setIsInputBoxFocused] = useState(false)
 
-  const handleOnPress = () => {
+  const handleOnPress = useCallback(() => {
     setIsInputBoxFocused(true)
-    if (inputRef.current) inputRef.current?.focus()
-  }
+    if (inputRef.current) {
+      inputRef.current?.focus()
+    }
+  }, [])
 
-  const handleOnBlur = () => {
+  const handleOnBlur = useCallback(() => {
     setIsInputBoxFocused(false)
-  }
+  }, [])
 
   useEffect(() => {
-    // update pin ready status
+    setTimeout(() => {
+      handleOnPress()
+    }, 1000)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     setIsPinReady(code.length === maximumLength)
-    // clean up function
     return () => {
       setIsPinReady(false)
     }
   }, [code, maximumLength, setIsPinReady])
-  const boxDigit = (_: any, index: number) => {
-    const emptyInput = ''
-    const digit = code[index] || emptyInput
 
-    const isCurrentValue = index === code.length
-    const isLastValue = index === maximumLength - 1
-    const isCodeComplete = code.length === maximumLength
+  const boxDigit = useCallback(
+    (_: any, index: number) => {
+      const emptyInput = ''
+      const digit = code[index] || emptyInput
 
-    const isValueFocused = isCurrentValue || (isLastValue && isCodeComplete)
+      const isCurrentValue = index === code.length
+      const isLastValue = index === maximumLength - 1
+      const isCodeComplete = code.length === maximumLength
 
-    return (
-      <SplitBoxes isFilled={!!digit || (isInputBoxFocused && isValueFocused)} key={index}>
-        <SplitBoxText>{digit}</SplitBoxText>
-      </SplitBoxes>
-    )
-  }
+      const isValueFocused = isCurrentValue || (isLastValue && isCodeComplete)
+
+      return (
+        <SplitBoxes isFilled={!!digit || (isInputBoxFocused && isValueFocused)} key={index}>
+          <SplitBoxText>{digit}</SplitBoxText>
+        </SplitBoxes>
+      )
+    },
+    [code, isInputBoxFocused, maximumLength]
+  )
 
   return (
     <OTPInputContainer>
       <SplitOTPBoxesContainer onPress={handleOnPress}>
         {boxArray.map(boxDigit)}
       </SplitOTPBoxesContainer>
+
       <TextInputHidden
         value={code}
         onChangeText={setCode}

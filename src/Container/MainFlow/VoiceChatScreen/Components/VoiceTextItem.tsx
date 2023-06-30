@@ -20,6 +20,7 @@ const VoiceTextItem = ({data, isDisabled = false}: any) => {
         borderRadius={300}
         url={user?.profile_image}
         size={30}
+        fontSize={moderateScale(15)}
       />
 
       <View style={styles.textContainer}>

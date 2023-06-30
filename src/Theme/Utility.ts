@@ -1,9 +1,11 @@
-import {Alert} from 'react-native'
 import NetInfo from '@react-native-community/netinfo'
 import {GoogleSignin} from '@react-native-google-signin/google-signin'
 import Voice from '@react-native-voice/voice'
 import _ from 'lodash'
 
+import APICall from '../APIRequest/APICall'
+import EndPoints from '../APIRequest/EndPoints'
+import AlertLoader from '../Components/AlertLoader'
 import {AudioFiles} from '../types/Types'
 
 const deepClone = (val: any) => {
@@ -34,7 +36,7 @@ const isInternet = () => {
 }
 
 const isValid = (value: string) => {
-  const reg = /\S+@\S+\.\S+/
+  const reg = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
   return !value.trim() || !reg.test(value.trim())
 }
 
@@ -93,17 +95,7 @@ const googleLogin = () => {
 
 const showAlert = (message = '') => {
   if (message) {
-    Alert.alert(
-      'Reeva',
-      message,
-      [
-        {
-          text: 'OK',
-          style: 'cancel'
-        }
-      ],
-      {userInterfaceStyle: 'light'}
-    )
+    AlertLoader.show(message)
   }
 }
 
@@ -239,6 +231,22 @@ const getAudioFile = (key: string) => {
   return files[Number(key)]
 }
 
+const addSpaceToDollarNumber = (value: string) => {
+  return value.replace(/\$(\d+)/g, '$ $1')
+}
+
+const googleAPILogin = (payload: any) => {
+  return new Promise<any>((resolve, reject) => {
+    APICall('post', payload, EndPoints.googleLogin).then(resolve).catch(reject)
+  })
+}
+
+const appleAPILogin = (payload: any) => {
+  return new Promise<any>((resolve, reject) => {
+    APICall('post', payload, EndPoints.appleLogin).then(resolve).catch(reject)
+  })
+}
+
 const Utility = {
   deepClone,
   isValid,
@@ -257,7 +265,10 @@ const Utility = {
   destroyVoice,
   isInternet,
   extractBracketWords,
-  wait
+  wait,
+  addSpaceToDollarNumber,
+  googleAPILogin,
+  appleAPILogin
 }
 
 export default Utility

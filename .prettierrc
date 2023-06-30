@@ -3,16 +3,12 @@
   "tabWidth": 2,
   "useTabs": false,
   "semi": false,
-
   "singleQuote": true,
   "trailingComma": "none",
-
   "bracketSpacing": false,
-
   "bracketSameLine": false,
   "arrowParens": "always",
   "rangeStart": 0,
-
   "requirePragma": false,
   "insertPragma": false,
   "proseWrap": "preserve"

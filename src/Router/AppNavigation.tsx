@@ -1,11 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {useEffect, useState} from 'react'
+import React, {useCallback, useEffect, useState} from 'react'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import {useDispatch, useSelector} from 'react-redux'
 import {CommonActions, NavigationContainer} from '@react-navigation/native'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 
+import APICall from '../APIRequest/APICall'
+import EndPoints from '../APIRequest/EndPoints'
 import ChangePasswordScreen from '../Container/MainFlow/ChangePasswordScreen/ChangePasswordScreen'
 import ContactDetailsScreen from '../Container/MainFlow/ContactDetailsScreen/ContactDetailsScreen'
 import ContactListScreen from '../Container/MainFlow/ContactListScreen/ContactListScreen'
@@ -16,7 +18,7 @@ import OfferDetailsScreen from '../Container/MainFlow/OffersScreen/OfferDetailsS
 import OffersScreen from '../Container/MainFlow/OffersScreen/OffersScreen'
 import PremiumPlanScreen from '../Container/MainFlow/PremiumPlanScreen/PremiumPlanScreen'
 import UserProfileScreen from '../Container/MainFlow/UserProfileScreen/UserProfileScreen'
-import {logOut, setToken} from '../Redux/Reducers/UserSlice'
+import {logOut, setToken, setUserData} from '../Redux/Reducers/UserSlice'
 import {Screens} from '../Theme'
 import Constant, {emitter} from '../Theme/Constant'
 import Utility from '../Theme/Utility'
@@ -34,6 +36,32 @@ const AppNavigation = () => {
   useEffect(() => {
     setISLogin(user?.token)
   }, [user])
+
+  useEffect(() => {
+    if (user?.token) {
+      getUpdatedUser()
+    }
+    const emit = emitter.addListener('onPurchase', () => {
+      getUpdatedUser()
+    })
+    return () => {
+      if (emit) {
+        emit?.remove()
+      }
+    }
+  }, [])
+
+  const getUpdatedUser = useCallback(() => {
+    APICall('get', {}, EndPoints.editProfile)
+      .then((resp: any) => {
+        if (resp?.status === 200) {
+          disaptch(setUserData(resp?.data?.data))
+        }
+      })
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+      })
+  }, [])
 
   useEffect(() => {
     const emit1 = emitter.addListener(Constant.eventListenerKeys.updateToken, async (data: any) => {

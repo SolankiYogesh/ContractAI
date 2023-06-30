@@ -1,6 +1,8 @@
 import React from 'react'
-import {Platform, ScrollViewProps, StyleProp, ViewStyle} from 'react-native'
+import {ScrollViewProps, StyleProp, ViewStyle} from 'react-native'
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
+
+import {Constant} from '../Theme'
 
 interface AppScrollViewProps extends ScrollViewProps {
   children?: React.ReactNode
@@ -21,7 +23,7 @@ const AppScrollView = (props: AppScrollViewProps) => {
       style={style}
       bounces={false}
       extraHeight={45}
-      extraScrollHeight={Platform.OS === 'ios' ? 70 : 10}
+      extraScrollHeight={Constant.isIOS ? 70 : 10}
       stickyHeaderIndices={stickyHeaderIndices}
       {...props}
     >

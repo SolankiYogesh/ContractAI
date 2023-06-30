@@ -1,11 +1,11 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {StyleSheet, View} from 'react-native'
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native'
+import {useDispatch} from 'react-redux'
+import {CommonActions, useIsFocused, useNavigation, useRoute} from '@react-navigation/native'
 import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {CreateAnAccountText, GettingText, ScrollContainer} from '../../../CommonStyle/AuthContainer'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppScrollView from '../../../Components/AppScrollView'
@@ -13,9 +13,15 @@ import BackButton from '../../../Components/BackButton'
 import Loader from '../../../Components/Loader'
 import Timer, {ICountdownRef} from '../../../Components/Timer'
 import TouchText from '../../../Components/TouchText'
+import {setUserData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Colors, Constant, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {
+  CommonStyles,
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer
+} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 import OTPInput from './Components/OTPInput'
@@ -32,6 +38,35 @@ const VerificationScreen = () => {
   const [isEnabled, setISEnabled] = useState(false)
   const route: any = useRoute()
   const isRegister = route?.params?.isRegister
+  const isSocialLogin = route?.params?.isSocialLogin
+  const dispatch = useDispatch()
+
+  const onLoginSetup = useCallback(
+    (resp: any) => {
+      Constant.token = resp?.data?.token
+      Constant.refresh = resp?.data?.refresh_token
+      const cloneData = Utility.deepClone(resp?.data?.data)
+      cloneData.token = resp?.data?.token
+      cloneData.refresh_token = resp?.data?.refresh_token
+
+      dispatch(setUserData(cloneData))
+
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            {
+              name: Screens.Drawer,
+              params: {
+                isLogOut: true
+              }
+            }
+          ]
+        })
+      )
+    },
+    [dispatch, navigation]
+  )
 
   useEffect(() => {
     if (isFocus) {
@@ -72,8 +107,32 @@ const VerificationScreen = () => {
         Loader.isLoading(false)
 
         if (resp?.status === 200) {
-          if (isRegister) {
+          if (isRegister && !isSocialLogin) {
             navigation.replace(Screens.LoginScreen)
+          } else if (isSocialLogin) {
+            if (isSocialLogin?.isApple) {
+              Utility.appleAPILogin(isSocialLogin)
+                .then((resp) => {
+                  if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
+                    onLoginSetup(resp)
+                  }
+                })
+                .catch(() => {
+                  navigation.replace(Screens.LoginScreen)
+                })
+            } else if (isSocialLogin?.isGoogle) {
+              Utility.googleAPILogin(isSocialLogin)
+                .then((resp) => {
+                  if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
+                    onLoginSetup(resp)
+                  }
+                })
+                .catch(() => {
+                  navigation.replace(Screens.LoginScreen)
+                })
+            } else {
+              navigation.replace(Screens.LoginScreen)
+            }
           } else {
             Constant.token = resp?.data?.data?.token
             navigation.navigate(Screens.NewPasswordScreen, {
@@ -82,11 +141,15 @@ const VerificationScreen = () => {
             })
           }
         } else {
+          setOTPCode('')
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => Loader.isLoading(false))
-  }, [navigation, otpCode, isRegister, email])
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
+  }, [otpCode, email, isRegister, isSocialLogin, navigation, onLoginSetup])
 
   const onPressResend = useCallback(async () => {
     const isInternet = await Utility.isInternet()
@@ -97,16 +160,21 @@ const VerificationScreen = () => {
       email
     }
     Loader.isLoading(true)
-    APICall('post', payload, EndPoints.resendOTP).then((resp: any) => {
-      Constant.BROKERDATA = null
-      Loader.isLoading(false)
-      Utility.showAlert(resp?.data?.message)
-      setOTPCode('')
-      if (timerRef?.current) {
-        timerRef?.current?.start()
-      }
-      setIsTimer(true)
-    })
+    APICall('post', payload, EndPoints.resendOTP)
+      .then((resp: any) => {
+        Constant.BROKERDATA = null
+        Loader.isLoading(false)
+        Utility.showAlert(resp?.data?.message)
+        setOTPCode('')
+        if (timerRef?.current) {
+          timerRef?.current?.start()
+        }
+        setIsTimer(true)
+      })
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [timerRef, setIsTimer, email])
 
   const renderTimer = useMemo(() => {
@@ -121,7 +189,7 @@ const VerificationScreen = () => {
           <GettingText>{English.R36}</GettingText>
           <CreateAnAccountText>{English.R37}</CreateAnAccountText>
 
-          <View style={CommonStyles.rowView}>
+          <View style={[CommonStyles.rowView, styles.emailContainer]}>
             <TouchText
               marginTop={0}
               color={Colors.blackShade2A30}
@@ -190,5 +258,9 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     width: '45%'
+  },
+  emailContainer: {
+    flex: 1,
+    flexWrap: 'wrap'
   }
 })

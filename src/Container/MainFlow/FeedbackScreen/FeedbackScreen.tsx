@@ -5,12 +5,6 @@ import {useNavigation} from '@react-navigation/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppAlertModal from '../../../Components/AppAlertModal'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
@@ -20,6 +14,12 @@ import BackButton from '../../../Components/BackButton'
 import Loader from '../../../Components/Loader'
 import English from '../../../Resources/Locales/English'
 import {Images} from '../../../Theme'
+import {
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import Utility from '../../../Theme/Utility'
 
 const FeedbackScreen = () => {
@@ -32,12 +32,16 @@ const FeedbackScreen = () => {
   const user = useSelector((state: any) => state?.user?.userData)
 
   useEffect(() => {
-    setISEnabled(!!(Utility.isEmpty(subject) && Utility.isEmpty(message) && message.length > 19))
+    setISEnabled(!!(Utility.isEmpty(subject) && Utility.isEmpty(message)))
   }, [subject, message])
 
   const onPressSubmit = useCallback(async () => {
     const isInternet = await Utility.isInternet()
     if (!isInternet) {
+      return
+    }
+    if (message.length < 19) {
+      Utility.showAlert('message is too short')
       return
     }
     const payload = {
@@ -57,7 +61,10 @@ const FeedbackScreen = () => {
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [subject, message, setISModal, user])
 
   return (

@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo} from 'react'
-import {Alert, Image, Platform, View} from 'react-native'
+import {Image, Platform, View} from 'react-native'
 import DeviceInfo from 'react-native-device-info'
 import InAppReview from 'react-native-in-app-review'
 import Share from 'react-native-share'
@@ -9,7 +9,7 @@ import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {CreateAnAccountText, GettingText} from '../../../CommonStyle/AuthContainer'
+import AlertLoader from '../../../Components/AlertLoader'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import AppProfileIcon from '../../../Components/AppProfileIcon'
@@ -18,7 +18,7 @@ import TouchText from '../../../Components/TouchText'
 import {logOut} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Images, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {CommonStyles, CreateAnAccountText, GettingText} from '../../../Theme/CommonStyles'
 import {scale, verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 import SettingButton from './Components/SettingButton'
@@ -52,10 +52,7 @@ const SettingScreen = () => {
     await Share.open({
       message:
         "Let's try Reeva app! It's a smart and easy app for real estate agents to create contracts in minutes. It's fast, simple and secure way to draft contracts that meet your needs and preferences. Get it at",
-      url:
-        Platform.OS === 'android'
-          ? 'https://play.google.com/store/apps/details?id=com.reeva'
-          : 'https://apps.apple.com/us/app/reeva/id1673635075',
+      url: Platform.OS === 'android' ? EndPoints.playStore : EndPoints.appleStore,
       title: 'Share with friend'
     })
   }, [])
@@ -65,18 +62,16 @@ const SettingScreen = () => {
   }, [navigation])
 
   const onPressLogOutButton = useCallback(() => {
-    Alert.alert(
-      'Reeva',
-      'Are you sure you want to log out ?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {text: 'OK', onPress: () => onPressLogOut()}
-      ],
-      {userInterfaceStyle: 'light'}
-    )
+    AlertLoader.show(English.R213, [
+      {
+        title: English.R207,
+        style: 'cancel'
+      },
+      {
+        title: English.R210,
+        onPress: onPressLogOut
+      }
+    ])
   }, [onPressLogOut])
 
   const onPressButton = useCallback(() => {
@@ -112,7 +107,10 @@ const SettingScreen = () => {
           Utility.showAlert(resp?.data?.message)
         }
       })
-      .catch(() => Loader.isLoading(false))
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
+        Loader.isLoading(false)
+      })
   }, [])
 
   const renderProfileView = useMemo(() => {

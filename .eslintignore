@@ -2,6 +2,5 @@ node_modules/
 android/**
 ios/**
 __tests__/**
-src/APIRequest/APICall.js
 src/CustomModule/**
 src/Packages/**

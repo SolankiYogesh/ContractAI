@@ -1,9 +1,11 @@
 import React from 'react'
-import {FlatList, View} from 'react-native'
+import {FlatList, StyleSheet, View} from 'react-native'
 
 import AppButton from '../../../../Components/AppButton'
 import English from '../../../../Resources/Locales/English'
-import {PlanTabProps, styles} from '../PremiumPlanScreen'
+import {Colors} from '../../../../Theme'
+import {heightPx, verticalScale} from '../../../../Theme/Responsive'
+import {PlanTabProps} from '../PremiumPlanScreen'
 import PlanItem from './PlanItem'
 import {InnerContainer, PlanTitle} from './PlanTabBar'
 
@@ -33,3 +35,19 @@ const FreePlan = ({isCurrentPlan}: PlanTabProps) => {
 }
 
 export default FreePlan
+const styles = StyleSheet.create({
+  tabContainer: {
+    alignItems: 'center',
+    marginTop: verticalScale(20),
+    height: heightPx(80),
+    width: '100%'
+  },
+  buttonStyle: {
+    borderWidth: 2,
+    borderColor: Colors.ThemeColor
+  },
+
+  textStyle: {
+    color: Colors.ThemeColor
+  }
+})

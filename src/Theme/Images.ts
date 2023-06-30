@@ -6,8 +6,6 @@ export default {
   google: require('../Resources/Images/google.png'),
   fb: require('../Resources/Images/fb.png'),
   left_arrow: require('../Resources/Images/left_arrow.png'),
-  password_change: require('../Resources/Images/password_change.png'),
-  noAccount: require('../Resources/Images/noAccount.png'),
   close: require('../Resources/Images/close.png'),
   eye: require('../Resources/Images/eye.png'),
   hide_eye: require('../Resources/Images/hide-eye.png'),
@@ -23,7 +21,6 @@ export default {
   image404: require('../Resources/Images/404.png'),
   mic: require('../Resources/Images/mic.png'),
   chat: require('../Resources/Images/chat.png'),
-  down: require('../Resources/Images/down.png'),
   up: require('../Resources/Images/up.png'),
   myContacts: require('../Resources/Images/myContacts.png'),
   email_templates: require('../Resources/Images/email_templates.png'),
@@ -51,9 +48,9 @@ export default {
   trash: require('../Resources/Images/trash.png'),
   send_email: require('../Resources/Images/send_email.png'),
   apple: require('../Resources/Images/apple.png'),
-  profile: require('../Resources/Images/profile.png'),
   animated: require('../Resources/Animations/animated.json'),
   static: require('../Resources/Animations/static.json'),
   Reeva: require('../Resources/Images/Reeva.png'),
-  Home: require('../Resources/Images/Home.png')
+  Home: require('../Resources/Images/Home.png'),
+  contract: require('../Resources/Images/contract.png')
 }

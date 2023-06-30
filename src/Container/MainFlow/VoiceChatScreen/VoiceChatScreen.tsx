@@ -1,11 +1,12 @@
 import React, {useCallback, useEffect, useMemo, useRef} from 'react'
-import {Alert, Image, Platform, ScrollView, StyleSheet, TextInput} from 'react-native'
+import {AppState, Image, Platform, ScrollView, StyleSheet, TextInput} from 'react-native'
 import {openSettings} from 'react-native-permissions'
 import Sound from 'react-native-sound'
 import {useDispatch, useSelector} from 'react-redux'
 import useState from 'react-usestateref'
 import Voice from '@react-native-voice/voice'
-import {useIsFocused, useRoute} from '@react-navigation/native'
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native'
+import Filter from 'bad-words'
 import _, {debounce} from 'lodash'
 import Lottie from 'lottie-react-native'
 import styled from 'styled-components/native'
@@ -13,6 +14,7 @@ import {v4 as uuid} from 'uuid'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
+import AlertLoader from '../../../Components/AlertLoader'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
 import AppInput from '../../../Components/AppInput'
@@ -21,7 +23,7 @@ import IosBottomButtonAvoid from '../../../Components/IosBottomButtonAvoid'
 import {AnimatedTabBar} from '../../../Packages/curved-bottom-navigation-bar/src/AnimatedTabBar'
 import {setPlanData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
-import {Colors, Constant, Images} from '../../../Theme'
+import {Colors, Constant, Images, Screens} from '../../../Theme'
 import {CommonStyles} from '../../../Theme/CommonStyles'
 import Permission from '../../../Theme/Permission'
 import {verticalScale} from '../../../Theme/Responsive'
@@ -40,10 +42,10 @@ const VoiceChatScreen = () => {
   const [playing, setPlaying, isPlayRef] = useState(false) // is response audio is playing or not
   const [text, setText] = useState('') // user input text
   const [isVoice, setISVoice, isVoiceRef] = useState(false) // is voice button is pressed or not
-  const [loadingID, setLoadingID] = useState('') // loading ID is used to identify which item is loading right now
-  const [catche_id, setCatche_ID] = useState('') // catche id is come from last reeva response (after successfully contract created)
+  const [loadingID, setLoadingID, loadingRef] = useState('') // loading ID is used to identify which item is loading right now
+  const [contract, setContract] = useState(null) // catche id is come from last reeva response (after successfully contract created)
   const plan_details = useSelector((state: any) => state?.user?.userData?.plan_details)
-
+  const navigation: any = useNavigation()
   const lottieRef = useRef<Lottie>(null) // lottie animation ref
   const scrollRef = useRef<ScrollView>(null) // used to scroll to bottom of list
   const isIOS = Platform.OS === 'ios' // is IOS or not
@@ -51,12 +53,20 @@ const VoiceChatScreen = () => {
   const index = useRef(0)
   const silenceTimer = useRef<number>() // timer for silence required for IOS voice text
   const isCalled = useRef<boolean>(false) // timer for silence required for IOS voice text
-
+  const isFocusRef = useRef(false)
   const isFocus = useIsFocused() // is screen focused or not
   const route: any = useRoute().params // route params
   const isDrawer = route?.isDrawer // is drawer screen or not
   const isRecordStart = useRef(false)
   const dispatch = useDispatch()
+
+  const filter = useMemo(
+    () =>
+      new Filter({
+        placeHolder: ' '
+      }),
+    []
+  )
 
   const beep = useMemo(() => new Sound('beep.mp3', Sound.MAIN_BUNDLE, () => {}), [])
 
@@ -109,18 +119,16 @@ const VoiceChatScreen = () => {
       if (!isInternet) {
         return
       }
-      if (
-        plan_details &&
-        plan_details?.monthly_offers > 3 &&
-        plan_details?.plan_name === Constant.Plans.Free
-      ) {
-        Utility.showAlert('To access this feature of Reeva please purchase Elite plan')
+
+      if (loadingRef.current) {
         return
       }
+
       if (_.trim(text)) {
         const lastItemIndex = _.findLastIndex(dataRef.current, (i) =>
           Boolean(i?.payload?.instruction && i?.payload?.instruction !== 'error')
         )
+
         setText('')
         if (!isFromVoice) {
           setData((state) => {
@@ -162,7 +170,7 @@ const VoiceChatScreen = () => {
           })
         }
         const payload: any = {
-          prompt: text
+          prompt: Utility.addSpaceToDollarNumber(text)
         }
 
         if (dataRef.current[lastItemIndex]?.payload?.instruction) {
@@ -170,7 +178,7 @@ const VoiceChatScreen = () => {
         }
 
         APICall('post', payload, EndPoints.sendPrompt)
-          .then((resp: any) => {
+          .then(async (resp: any) => {
             isCalled.current = false
             setLoadingID('')
             if (resp?.status === 200 && resp?.data) {
@@ -181,18 +189,27 @@ const VoiceChatScreen = () => {
                   _.includes(resp?.data?.transcript, 'contact')
                 )
               ) {
-                setCatche_ID(resp?.data?.transcript)
+                const contractsResponse: any = await APICall('get', {}, EndPoints.getOffers).catch(
+                  () => {}
+                )
+                const contract = _.find(
+                  contractsResponse?.data?.contracts,
+                  (i) => i?.filled_form === `/${resp?.data?.transcript}`
+                )
+
+                setContract(contract)
                 setViewIndex(2)
                 if (plan_details?.plan_name === Constant.Plans.Free) {
                   dispatch(
                     setPlanData({
-                      monthly_offers: Number(plan_details?.monthly_offers || 0) + 1
+                      monthly_contracts: Number(plan_details?.monthly_contracts || 0) + 1
                     })
                   )
                 }
                 return
               }
               if (resp?.data?.transcript) {
+                setLoadingID('')
                 setData((state) => {
                   const clone: ChatDataType[] = JSON.parse(JSON.stringify(state))
                   clone[index.current].payload = {
@@ -224,7 +241,15 @@ const VoiceChatScreen = () => {
           })
       }
     },
-    [dataRef, dispatch, plan_details, setData]
+    [
+      dataRef,
+      dispatch,
+      loadingRef,
+      plan_details?.monthly_contracts,
+      plan_details?.plan_name,
+      setData,
+      setLoadingID
+    ]
   )
 
   const onPressReset = useCallback(() => {
@@ -236,9 +261,9 @@ const VoiceChatScreen = () => {
     setText('')
     setISVoice(false)
     setLoadingID('')
-    setCatche_ID('')
+    setContract(null)
     isRecordStart.current = false
-  }, [setData, setISVoice, setPlaying, setViewIndex])
+  }, [setData, setISVoice, setLoadingID, setPlaying])
 
   const stopRecognizing = useCallback(() => {
     return new Promise<boolean>(async (resolve) => {
@@ -275,18 +300,16 @@ const VoiceChatScreen = () => {
             setISVoice(false)
             isRecordStart.current = false
             setViewIndex(0)
-            Alert.alert(
-              'Reeva',
-              'Please allow permission to access mic',
-              [
-                {
-                  text: 'Cancel',
-                  style: 'cancel'
-                },
-                {text: 'Change Permission', onPress: () => openSettings()}
-              ],
-              {userInterfaceStyle: 'light'}
-            )
+            AlertLoader.show(English.R208, [
+              {
+                title: 'Cancel',
+                style: 'cancel'
+              },
+              {
+                title: English.R206,
+                onPress: openSettings
+              }
+            ])
           }
         })
       }
@@ -294,6 +317,7 @@ const VoiceChatScreen = () => {
   }, [isVoiceRef, setISVoice])
 
   const onFocusScreen = useCallback(async () => {
+    isFocusRef.current = isFocus
     if (isFocus) {
       if (isVoiceRef.current) {
         await startRecognizing()
@@ -304,6 +328,23 @@ const VoiceChatScreen = () => {
       isRecordStart.current = false
     }
   }, [isFocus, isVoiceRef, startRecognizing, stopRecognizing])
+
+  const permiumAlert = useCallback(() => {
+    AlertLoader.show(English.R208, [
+      {
+        title: 'OK',
+        style: 'cancel'
+      },
+      {
+        title: English.R209,
+        onPress: () => {
+          navigation.navigate(Screens.PremiumPlanScreen, {
+            initialIndex: 2
+          })
+        }
+      }
+    ])
+  }, [navigation])
 
   const onIndexChange = useCallback(
     async (index: number) => {
@@ -317,14 +358,14 @@ const VoiceChatScreen = () => {
           isRecordStart.current = true
         }
       } else if (index === 3) {
-        Utility.showAlert('To access this feature of Reeva please purchase Elite plan')
+        permiumAlert()
       } else {
         setISVoice(false)
         await stopRecognizing()
         isRecordStart.current = false
       }
     },
-    [beep, setISVoice, startRecognizing, stopRecognizing]
+    [beep, permiumAlert, setISVoice, startRecognizing, stopRecognizing]
   )
 
   const onEndSpeech = useCallback(
@@ -344,14 +385,21 @@ const VoiceChatScreen = () => {
   const setVoiceData = useCallback(
     (e: SpeechResultsType, isActual = false) => {
       setISrecording(!!_.trim(e?.value[0]))
+
       if (e?.value?.length > 0 && !!_.trim(e?.value[0])) {
+        const cleanText = filter?.clean(e?.value[0])
         if (!dataRef.current[index.current]) {
           setData((state) => {
             const clone: ChatDataType[] = JSON.parse(JSON.stringify(state))
+
+            if (!_.trim(cleanText)) {
+              return clone
+            }
+
             clone.push({
               id: uuid(),
               payload: {
-                text: e?.value[0]
+                text: _.trim(cleanText)
               },
               isMe: false
             })
@@ -361,7 +409,10 @@ const VoiceChatScreen = () => {
         } else {
           setData((state) => {
             const clone: ChatDataType[] = JSON.parse(JSON.stringify(state))
-            clone[index.current].payload.text = e?.value[0]
+            if (!_.trim(cleanText)) {
+              return clone
+            }
+            clone[index.current].payload.text = _.trim(cleanText)
             return clone
           })
         }
@@ -376,7 +427,7 @@ const VoiceChatScreen = () => {
         }, 2000)
       }
     },
-    [dataRef, onEndSpeech, setData]
+    [dataRef, filter, onEndSpeech, setData]
   )
 
   useEffect(() => {
@@ -398,6 +449,9 @@ const VoiceChatScreen = () => {
       }
     }
     Voice.onSpeechError = async (e) => {
+      if (!isFocusRef.current) {
+        return
+      }
       if (
         isIOS &&
         isRecordStart.current &&
@@ -425,50 +479,74 @@ const VoiceChatScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const onPlayBackStateChange = useCallback(
+    async (state: boolean) => {
+      setPlaying(state)
+      if (state) {
+        stopRecognizing()
+      } else {
+        if (inputRef.current) {
+          inputRef.current?.focus()
+        }
+        if (isVoiceRef.current) {
+          beep.play(() => beep.stop())
+        }
+        await startRecognizing()
+        isRecordStart.current = true
+      }
+    },
+    [beep, isVoiceRef, setPlaying, startRecognizing, stopRecognizing]
+  )
+
+  useEffect(() => {
+    AppState.addEventListener('change', async (state) => {
+      isFocusRef.current = state === 'active'
+      if (state === 'active') {
+        if (isVoiceRef.current) {
+          await startRecognizing()
+          isRecordStart.current = true
+        }
+      } else {
+        await stopRecognizing()
+        isRecordStart.current = false
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const onAnimationEnd = useCallback(
+    (state: boolean) => {
+      setPlaying(state)
+      if (scrollRef.current) {
+        scrollRef.current?.scrollToEnd({
+          animated: true
+        })
+      }
+    },
+    [setPlaying]
+  )
+
   const renderItem = useCallback(
     ({item}: {item: ChatDataType}) => {
       return item?.isMe ? (
         <VoiceDataItem
-          key={item?.id}
-          isDisabled={item?.isDisabled}
-          onAnimationEnd={(state) => {
-            setPlaying(state)
-            if (scrollRef.current) {
-              scrollRef.current?.scrollToEnd({
-                animated: true
-              })
-            }
-          }}
-          onPlayBackStateChange={async (state: boolean) => {
-            setPlaying(state)
-
-            if (state) {
-              stopRecognizing()
-            } else {
-              if (inputRef.current) {
-                inputRef.current?.focus()
-              }
-              if (isVoiceRef.current) {
-                beep.play(() => beep.stop())
-              }
-
-              await startRecognizing()
-              isRecordStart.current = true
-            }
-          }}
+          isSound={plan_details?.reeva_voice}
+          onAnimationEnd={onAnimationEnd}
+          onPlayBackStateChange={onPlayBackStateChange}
           data={item?.payload}
+          key={item?.id}
           loading={loadingID === item?.id}
         />
       ) : (
-        <VoiceTextItem isDisabled={item?.isDisabled} key={item?.id} data={item?.payload} />
+        <VoiceTextItem key={item?.id} isDisabled={item?.isDisabled} data={item?.payload} />
       )
     },
-    [beep, isVoiceRef, loadingID, setPlaying, startRecognizing, stopRecognizing]
+    [loadingID, onAnimationEnd, onPlayBackStateChange, plan_details?.reeva_voice]
   )
 
   const renderFirstView = useMemo(() => {
-    return <VoiceFirstView onPressReset={onPressReset} viewIndex={viewIndex} />
-  }, [onPressReset, viewIndex])
+    return <VoiceFirstView contract={contract} onPressReset={onPressReset} viewIndex={viewIndex} />
+  }, [contract, onPressReset, viewIndex])
 
   const renderSecondVIew = useMemo(() => {
     return (
@@ -491,19 +569,38 @@ const VoiceChatScreen = () => {
         onChangeText={setText}
         value={text}
         allowFontScaling
-        autoCapitalize={'none'}
+        autoCapitalize={'sentences'}
         autoCorrect={false}
         spellCheck={false}
-        editable={!loadingID}
+        editable={!(loadingID || playing)}
         ref={inputRef}
         onSubmitEditing={(e) => {
-          setViewIndex(1)
-          onSendMsg(e.nativeEvent.text, false)
+          if (
+            plan_details &&
+            Number(plan_details?.monthly_contracts) >= Number(plan_details?.contract_limit) &&
+            plan_details?.plan_name === Constant.Plans.Free
+          ) {
+            Utility.showAlert(
+              'Your maximum limit for creating offers for the free plan has been over'
+            )
+            setText('')
+            return
+          }
+
+          if (_.trim(e?.nativeEvent?.text)) {
+            const cleanText = filter.clean(e?.nativeEvent?.text)
+            if (_.trim(cleanText)) {
+              setViewIndex(1)
+              onSendMsg(_.trim(cleanText), false)
+            } else {
+              setText('')
+            }
+          }
         }}
         returnKeyType={'send'}
       />
     )
-  }, [text, loadingID, setViewIndex, onSendMsg])
+  }, [text, loadingID, playing, plan_details, onSendMsg, filter])
 
   const renderLottieAnimation = useMemo(() => {
     return (
@@ -524,14 +621,14 @@ const VoiceChatScreen = () => {
       <AppHeader isMenu={isDrawer} isBack={!isDrawer} title={English.R184} />
       <AppScrollView
         style={CommonStyles.flex}
-        scrollEnabled={false}
         nestedScrollEnabled
+        scrollEnabled={false}
         contentContainerStyle={CommonStyles.flex}
       >
         {viewIndex === 0 || viewIndex === 2 ? renderFirstView : renderSecondVIew}
 
-        {viewIndex === 2 && catche_id ? (
-          <TransScriptBottomSheet catche_id={catche_id} />
+        {viewIndex === 2 && contract ? (
+          <TransScriptBottomSheet contract={contract} />
         ) : (
           <AnimatedTabBar
             duration={500}

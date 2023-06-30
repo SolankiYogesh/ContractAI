@@ -34,7 +34,8 @@ const EmailTemplateScreen = () => {
           setTemplates(resp?.data?.data)
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        Utility.showAlert(String(e?.data?.message))
         setLoading(false)
       })
   }, [])

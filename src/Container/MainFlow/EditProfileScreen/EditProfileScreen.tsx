@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {Alert, StyleSheet, TextInput, View} from 'react-native'
+import {StyleSheet, TextInput, View} from 'react-native'
 import ImagePicker, {ImageOrVideo} from 'react-native-image-crop-picker'
 import {openSettings} from 'react-native-permissions'
 import {useDispatch, useSelector} from 'react-redux'
@@ -9,7 +9,7 @@ import styled from 'styled-components/native'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {ScrollContainer, styles} from '../../../CommonStyle/AuthContainer'
+import AlertLoader from '../../../Components/AlertLoader'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
 import AppHeader from '../../../Components/AppHeader'
@@ -20,7 +20,7 @@ import Loader from '../../../Components/Loader'
 import {setUserData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Colors, Images} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {CommonStyles, ScrollContainer, styles} from '../../../Theme/CommonStyles'
 import {Fonts} from '../../../Theme/Fonts'
 import Permission from '../../../Theme/Permission'
 import {moderateScale, verticalScale} from '../../../Theme/Responsive'
@@ -161,29 +161,28 @@ const EditProfileScreen = () => {
     (text: string) => {
       let errorMessage = ''
       if (submitPressed) {
-        if (Utility.isValid(email)) {
+        if (Utility.isValid(text)) {
           errorMessage = English.R163
         }
       }
       setEmail(text)
       setErrEmail(errorMessage)
     },
-    [submitPressed, email]
+    [submitPressed]
   )
 
   const onPermissionReject = useCallback(() => {
-    Alert.alert(
-      'Reeva',
-      'Please allow permission to access gallery',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {text: 'Change Permission', onPress: () => openSettings()}
-      ],
-      {userInterfaceStyle: 'light'}
-    )
+    AlertLoader.show(English.R188, [
+      {
+        title: 'Cancel',
+        style: 'cancel'
+      },
+      {
+        title: English.R206,
+
+        onPress: openSettings
+      }
+    ])
   }, [])
 
   const onPressImagePicker = useCallback(async () => {
@@ -192,7 +191,8 @@ const EditProfileScreen = () => {
     if (isStorage) {
       ImagePicker.openPicker({
         cropping: true,
-        includeBase64: true
+        includeBase64: true,
+        compressImageQuality: 0.5
       })
         .then((image) => {
           setProfileUri(image)
@@ -237,6 +237,8 @@ const EditProfileScreen = () => {
             profileUri?.path?.substring(profileUri?.path?.lastIndexOf('/') + 1) ||
             ''
         }
+      } else {
+        delete payload.profile_image
       }
 
       payload.data = JSON.stringify({
@@ -271,7 +273,8 @@ const EditProfileScreen = () => {
             Utility.showAlert(resp?.data?.message)
           }
         })
-        .catch(() => {
+        .catch((e) => {
+          Utility.showAlert(String(e?.data?.message))
           Loader.isLoading(false)
         })
     }
@@ -300,11 +303,7 @@ const EditProfileScreen = () => {
       <ScrollContainer>
         <AppScrollView>
           <ProfileContainer>
-            <AppProfileImage
-              borderRadius={30}
-              url={profileUri?.path || profileUri}
-              size={verticalScale(120)}
-            />
+            <AppProfileImage borderRadius={30} url={profileUri?.path || profileUri} size={120} />
             <CameraContainer onPress={onPressImagePicker}>
               <CameraIcon tintColor={Colors.ThemeColor} source={Images.pencil} />
             </CameraContainer>

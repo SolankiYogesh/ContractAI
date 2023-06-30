@@ -7,12 +7,6 @@ import jwt_decode from 'jwt-decode'
 
 import APICall from '../../../APIRequest/APICall'
 import EndPoints from '../../../APIRequest/EndPoints'
-import {
-  CreateAnAccountText,
-  GettingText,
-  ScrollContainer,
-  styles
-} from '../../../CommonStyle/AuthContainer'
 import AppAlertModal from '../../../Components/AppAlertModal'
 import AppButton from '../../../Components/AppButton'
 import AppContainer from '../../../Components/AppContainer'
@@ -24,15 +18,21 @@ import TouchText from '../../../Components/TouchText'
 import {setUserData} from '../../../Redux/Reducers/UserSlice'
 import English from '../../../Resources/Locales/English'
 import {Colors, Constant, Images, Screens} from '../../../Theme'
-import {CommonStyles} from '../../../Theme/CommonStyles'
+import {
+  CommonStyles,
+  CreateAnAccountText,
+  GettingText,
+  ScrollContainer,
+  styles
+} from '../../../Theme/CommonStyles'
 import {verticalScale} from '../../../Theme/Responsive'
 import Utility from '../../../Theme/Utility'
 
 const LoginScreen = () => {
   const navigation: any = useNavigation()
   const passwordRef = useRef<TextInput>(null)
-  const [email, setEmail] = useState(__DEV__ ? 'yoga@yopmail.com' : '')
-  const [password, setPassword] = useState(__DEV__ ? '12345678' : '')
+  const [email, setEmail] = useState(Constant.isDebug ? 'free@yopmail.com' : '')
+  const [password, setPassword] = useState(Constant.isDebug ? '12345678' : '')
   const [isEnabled, setISEnabled] = useState(false)
   const [submitPressed, setSubmitPressed] = useState(false)
   const [errEmail, setErrEmail] = useState('')
@@ -47,7 +47,7 @@ const LoginScreen = () => {
   const onChangeEmail = (text: string) => {
     let errorMessage = ''
     if (submitPressed) {
-      if (Utility.isValid(email)) {
+      if (Utility.isValid(text)) {
         errorMessage = English.R163
       }
     }
@@ -57,7 +57,7 @@ const LoginScreen = () => {
   const onChangePassword = (text: string) => {
     let errorMessage = ''
     if (submitPressed) {
-      if (!Utility.validatePassword(password)) {
+      if (!Utility.validatePassword(text)) {
         errorMessage = English.R165
       }
     }
@@ -70,10 +70,11 @@ const LoginScreen = () => {
   }, [navigation])
 
   const onPressRegister = useCallback(
-    (isGoogle: any = false, isApple = false) => {
+    (isGoogle: any = false, isApple = false, isSocialLogin: any) => {
       navigation.navigate(Screens.RegisterScreen, {
         isGoogle: isGoogle || null,
-        isApple
+        isApple,
+        isSocialLogin
       })
     },
     [navigation]
@@ -121,26 +122,35 @@ const LoginScreen = () => {
       }
 
       Loader.isLoading(true)
-      APICall('post', payload, EndPoints.googleLogin)
+      Utility.googleAPILogin(payload)
         .then(async (resp: any) => {
-          Loader.isLoading(false)
-          if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
-            onLoginSetup(resp)
-          } else if (resp?.status === 201 && resp?.data?.is_new_user) {
-            onPressRegister(googleUser?.user)
-          } else if (resp?.status === 404) {
-            await Utility.wait()
-            setISModal(true)
-          } else {
-            await Utility.wait()
-            Utility.showAlert(resp?.data?.message)
-          }
+          Loader.isLoading(false, () => {
+            Utility.wait(500).then(async () => {
+              if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
+                onLoginSetup(resp)
+              } else if (resp?.status === 201 && resp?.data?.is_new_user) {
+                onPressRegister(googleUser?.user, false, {...payload, isGoogle: true})
+              } else if (resp?.status === 202) {
+                navigation.navigate(Screens.VerificationScreen, {
+                  isRegister: true,
+                  email: googleUser?.user?.email,
+                  isSocialLogin: {...payload, isGoogle: true}
+                })
+              } else if (resp?.status === 404) {
+                setISModal(true)
+              } else {
+                await Utility.wait(300)
+                Utility.showAlert(resp?.data?.message)
+              }
+            })
+          })
         })
         .catch((e) => {
+          Utility.showAlert(String(e?.data?.message))
           Loader.isLoading(false)
         })
     }
-  }, [onLoginSetup, onPressRegister])
+  }, [navigation, onLoginSetup, onPressRegister])
 
   const onPressAppleLogin = useCallback(async () => {
     try {
@@ -160,25 +170,35 @@ const LoginScreen = () => {
         }
 
         Loader.isLoading(true)
-        APICall('post', payload, EndPoints.appleLogin)
+        Utility.appleAPILogin(payload)
           .then(async (resp: any) => {
-            Loader.isLoading(false)
-            if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
-              onLoginSetup(resp)
-            } else if (resp?.status === 201 && resp?.data?.is_new_user) {
-              onPressRegister({email}, true)
-            } else if (resp?.status === 404) {
-              setISModal(true)
-            } else {
-              await Utility.wait()
-
-              Utility.showAlert(resp?.data?.message)
-            }
+            Loader.isLoading(false, () => {
+              Utility.wait(500).then(async () => {
+                if (resp?.status === 200 && resp?.data?.data && !resp?.data?.is_new_user) {
+                  onLoginSetup(resp)
+                } else if (resp?.status === 201 && resp?.data?.is_new_user) {
+                  onPressRegister({email}, true, {...payload, isApple: true})
+                } else if (resp?.status === 202) {
+                  navigation.navigate(Screens.VerificationScreen, {
+                    isRegister: true,
+                    email,
+                    isSocialLogin: {...payload, isApple: true}
+                  })
+                } else if (resp?.status === 404) {
+                  setISModal(true)
+                } else {
+                  Utility.showAlert(resp?.data?.message)
+                }
+              })
+            })
           })
-          .catch(() => Loader.isLoading(false))
+          .catch((e) => {
+            Utility.showAlert(String(e?.data?.message))
+            Loader.isLoading(false)
+          })
       }
     } catch (error) {}
-  }, [onLoginSetup, onPressRegister])
+  }, [navigation, onLoginSetup, onPressRegister])
 
   const onPressLogin = useCallback(async () => {
     Keyboard.dismiss()
@@ -199,6 +219,7 @@ const LoginScreen = () => {
 
     if (isValid) {
       Loader.isLoading(true)
+
       const payload = {
         email,
         password
@@ -206,26 +227,27 @@ const LoginScreen = () => {
 
       APICall('post', payload, EndPoints.login)
         .then(async (resp: any) => {
-          Loader.isLoading(false)
-
-          if (resp?.status === 200 && resp?.data?.data) {
-            onLoginSetup(resp)
-          } else if (resp?.status === 202) {
-            navigation.navigate(Screens.VerificationScreen, {
-              isRegister: true,
-              email
+          Loader.isLoading(false, () => {
+            Utility.wait(500).then(() => {
+              if (resp?.status === 200 && resp?.data?.data) {
+                onLoginSetup(resp)
+              } else if (resp?.status === 202) {
+                navigation.navigate(Screens.VerificationScreen, {
+                  isRegister: true,
+                  email
+                })
+              } else if (resp?.status === 404) {
+                setISModal(true)
+              } else {
+                Utility.showAlert(resp?.data?.message)
+              }
             })
-          } else if (resp?.status === 404) {
-            await Utility.wait()
-
-            setISModal(true)
-          } else {
-            await Utility.wait()
-
-            Utility.showAlert(resp?.data?.message)
-          }
+          })
         })
-        .catch(() => Loader.isLoading(false))
+        .catch((e) => {
+          Utility.showAlert(String(e?.data?.message))
+          Loader.isLoading(false)
+        })
     }
   }, [email, navigation, onLoginSetup, password])
 
@@ -317,7 +339,7 @@ const LoginScreen = () => {
               marginBottom={0}
               textAlign={'center'}
               text={English.R30}
-              onPress={() => onPressRegister(false)}
+              onPress={() => onPressRegister(false, false, null)}
             />
           </View>
         </AppScrollView>
